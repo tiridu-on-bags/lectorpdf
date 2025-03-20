@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { fetchPrediction } from '$lib/api/client';
+    import { fetchPrediction, checkServerStatus } from '$lib/api/client';
     import { onMount } from 'svelte';
     
     type InputData = {
@@ -17,8 +17,26 @@
     let result: ResultData | null = null;
     let loading = false;
     let error = '';
+    let isServerOnline = false;
+    
+    // Verificar si el servidor está en línea al cargar el componente
+    onMount(async () => {
+        isServerOnline = await checkServerStatus();
+        if (!isServerOnline) {
+            error = "El servidor de Gradio no está en línea. Verifica que esté ejecutándose.";
+        }
+    });
     
     async function handleSubmit() {
+        // Verificar nuevamente el estado del servidor antes de enviar
+        if (!isServerOnline) {
+            isServerOnline = await checkServerStatus();
+            if (!isServerOnline) {
+                error = "El servidor de Gradio no está en línea. Verifica que esté ejecutándose.";
+                return;
+            }
+        }
+        
         loading = true;
         error = '';
         
@@ -41,6 +59,18 @@
 <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4">Mi App Gradio + SvelteKit</h1>
     
+    <!-- Indicador de estado del servidor -->
+    <div class="mb-4">
+        <p>
+            Estado del servidor: 
+            {#if isServerOnline}
+                <span class="text-green-600 font-semibold">En línea</span>
+            {:else}
+                <span class="text-red-600 font-semibold">Desconectado</span>
+            {/if}
+        </p>
+    </div>
+    
     <div class="mb-4">
         <label class="block mb-2">
             Valor numérico:
@@ -54,7 +84,7 @@
         
         <button 
             on:click={handleSubmit} 
-            disabled={loading}
+            disabled={loading || !isServerOnline}
             class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
         >
             {loading ? 'Procesando...' : 'Enviar a la API'}

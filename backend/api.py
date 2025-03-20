@@ -1,5 +1,19 @@
 import gradio as gr
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from models.predictor import predict_something
+
+# Crear la aplicación FastAPI para mayor control
+app = FastAPI()
+
+# Configurar CORS para permitir solicitudes desde SvelteKit
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En producción, restringe esto a tu dominio
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # API para ser consumida por el frontend
 def create_api():
@@ -20,16 +34,18 @@ def create_api():
         description="API interna - No es una interfaz de usuario"
     )
     
-    # Configuración importante para permitir solicitudes desde SvelteKit
-    demo.launch(
-        server_name="0.0.0.0",  # Permite conexiones externas
-        server_port=7860,       # Puerto estándar de Gradio
-        share=False,            # No compartir públicamente
-        enable_cors=True,       # Crítico para permitir peticiones desde SvelteKit
-    )
+    # Montar Gradio en la aplicación FastAPI
+    # Esto permitirá que Gradio gestione correctamente la ruta /api/predict
+    gr.mount_gradio_app(app, demo, path="/")
     
-    return demo
+    return app
+
+# Función para ejecutar la aplicación
+def start_server():
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=7860)
 
 # Ejecutar la API si este archivo es el punto de entrada
 if __name__ == "__main__":
-    create_api()
+    create_api()  # Crea la API y la monta en FastAPI
+    start_server()  # Inicia el servidor
