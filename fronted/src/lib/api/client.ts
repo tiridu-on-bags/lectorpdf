@@ -1,14 +1,41 @@
-// Cliente para comunicarse con el backend de Gradio
-
-// URL base de la API de Gradio
+// Configuración base
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7860';
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // ms
 
-// Definición de tipos para los datos
+/**
+ * Implementación de retroceso exponencial para peticiones fallidas
+ * @param fn - Función a ejecutar con reintentos
+ * @param retries - Número máximo de reintentos
+ * @param delay - Retraso inicial entre reintentos (ms)
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries = MAX_RETRIES,
+  delay = RETRY_DELAY
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries <= 0) throw error;
+    
+    // Retroceso exponencial
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return withRetry(fn, retries - 1, delay * 2);
+  }
+}
+
+/**
+ * Interfaz para respuestas de Gradio
+ */
 interface GradioResponse<T> {
   data: T[];
   [key: string]: unknown;
 }
 
+/**
+ * Interfaz para respuestas del backend
+ */
 interface BackendResponse<T> {
   success: boolean;
   data?: T;
@@ -18,10 +45,10 @@ interface BackendResponse<T> {
 /**
  * Realiza una petición a la API de Gradio
  * @param inputData - Datos a enviar a la API
- * @returns Respuesta de la API
+ * @returns Promesa con el resultado de la predicción
  */
 export async function fetchPrediction<T, R>(inputData: T): Promise<R> {
-  try {
+  return withRetry(async () => {
     // Gradio espera los datos en un formato específico
     const response = await fetch(`${API_URL}/api/predict`, {
       method: 'POST',
@@ -50,11 +77,7 @@ export async function fetchPrediction<T, R>(inputData: T): Promise<R> {
     }
     
     throw new Error('Formato de respuesta inválido');
-  } catch (error) {
-    console.error('Error al comunicarse con la API:', 
-      error instanceof Error ? error.message : String(error));
-    throw error;
-  }
+  });
 }
 
 /**
@@ -63,8 +86,15 @@ export async function fetchPrediction<T, R>(inputData: T): Promise<R> {
  */
 export async function checkServerStatus(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_URL}/`, { method: 'HEAD' });
-    return response.ok;
+    // Implementación con retroceso exponencial
+    return await withRetry(async () => {
+      const response = await fetch(`${API_URL}/`, { 
+        method: 'HEAD',
+        // Evitar caché del navegador
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      return response.ok;
+    }, 1); // Solo un intento para verificación rápida
   } catch (error) {
     console.error('Error al verificar el estado del servidor:', 
       error instanceof Error ? error.message : String(error));
