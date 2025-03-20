@@ -1,6 +1,6 @@
 #Configurar el entorno backend antes de usar
 
-## Correr el scriot api.py
+## Correr el script api.py
 
 
 #Para el fronted installar npm 
