@@ -28,7 +28,7 @@ export async function fetchPrediction(params: PredictionParams) {
     const requestBody = {
       data: [
         params.value,
-        params.text || ''
+        params.text !== undefined ? params.text : null  // Para el error 422 
       ]
     };
 

@@ -41,6 +41,7 @@
   });
 </script>
 
+
 <!-- Capa de presentación -->
 <div class="container mx-auto p-6 max-w-4xl">
   <h1 class="text-3xl font-bold mb-6">Integración SvelteKit-Gradio</h1>

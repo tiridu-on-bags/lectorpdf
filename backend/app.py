@@ -9,12 +9,11 @@ app = FastAPI()
 # Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # URL de desarrollo de SvelteKit
+    allow_origins=["http://localhost:5173", "http://localhost:7860"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Función de predicción
 def predict(value, text=None):
     # Lógica de procesamiento
@@ -22,11 +21,9 @@ def predict(value, text=None):
     prediction = f"Predicción para {value}" + (f" con texto: {text}" if text else "")
     
     return {
-        "success": True,
-        "data": {
-            "processed_value": processed_value,
-            "prediction": prediction
-        }
+        "status": "success",
+        "data": [processed_value, prediction],
+        "message": "Predicción completada"
     }
 
 # Definición de la interfaz Gradio

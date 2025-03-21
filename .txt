@@ -2,8 +2,8 @@
 
 ## Correr el scriot api.py
 
-
-#Para el fronted installar npm 
+source backend/venv/bin/activate
+python api.py
 
 
 ## npm install

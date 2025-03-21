@@ -170,13 +170,22 @@
   },
   "active": "9161ea0981ef29f8",
   "lastOpenFiles": [
+    "backend/__pycache__/main.cpython-313.pyc",
+    "backend/main.py",
+    "backend/venv/lib/python3.13/site-packages/pip-25.0.1.dist-info/top_level.txt",
+    "backend/venv/lib/python3.13/site-packages/pip-25.0.1.dist-info/entry_points.txt",
+    "backend/venv/lib/python3.13/site-packages/pip-25.0.1.dist-info/WHEEL",
+    "backend/venv/lib/python3.13/site-packages/pip-25.0.1.dist-info/REQUESTED",
+    "backend/venv/lib/python3.13/site-packages/pip-25.0.1.dist-info/RECORD",
+    "backend/venv/lib/python3.13/site-packages/pip-25.0.1.dist-info/METADATA",
+    "backend/venv/lib/python3.13/site-packages/pip-25.0.1.dist-info/LICENSE.txt",
+    "backend/venv/lib/python3.13/site-packages/pip-25.0.1.dist-info/INSTALLER",
+    "backend/venv/lib/python3.13/site-packages/pip-25.0.1.dist-info/AUTHORS.txt",
     "mvcmodel.png",
     "Screenshot 2025-03-21 at 11.17.04 a.m..png",
-    "MVC model lector pdf by Jonathan.pdf",
     "2025-03-21.md",
     "README.md",
     "Pasted image 20250321105642.png",
-    "Clippings/Model View Controller (MVC).md",
-    "Clippings"
+    "Clippings/Model View Controller (MVC).md"
   ]
 }
