@@ -7,6 +7,7 @@ import time
 # Inicialización del Gateway API
 app = FastAPI(title="ML Gateway API")
 
+
 # Configuración CORS - crítico para comunicación cross-origin
 app.add_middleware(
     CORSMiddleware,

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Header from './Header.svelte';
 	import '../app.css';
+	import "@pdfslick/core/dist/pdf_viewer.css";
 
 	let { children } = $props();
 </script>

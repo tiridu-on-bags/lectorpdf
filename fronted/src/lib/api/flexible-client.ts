@@ -7,13 +7,21 @@ export interface PredictionParams {
   text?: string;
 }
 
+// Interfaz para la respuesta API original
+interface ApiResponse {
+  status: string;
+  data: [number, string];
+  message: string;
+  [key: string]: unknown;
+}
+
 // Interfaz para respuesta
 export interface PredictionResult {
   processed_value: number;
   prediction: string;
   status: string;
   message: string;
-  raw_response: any;
+  raw_response: ApiResponse;
 }
 
 /**
@@ -50,7 +58,7 @@ export async function predictWithFlexibleAPI(params: PredictionParams): Promise<
       throw new Error(`Error ${response.status}: ${errorText}`);
     }
     
-    const data = await response.json();
+    const data = await response.json() as ApiResponse;
     console.log('Respuesta API:', data);
     
     // Transformar los datos al formato esperado por la aplicación

@@ -3,7 +3,7 @@ import { writable, derived } from 'svelte/store';
 
 // Configuración consistente con cliente API
 const API_CONFIG = {
-  baseUrl: import.meta.env.VITE_GRADIO_API_URL || 'http://localhost:7860',
+  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:7860',
   healthEndpoint: '/api/health',
   checkInterval: 5000
 };

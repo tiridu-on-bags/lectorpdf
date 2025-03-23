@@ -1,0 +1,67 @@
+<!-- src/routes/pdf-viewer/+page.svelte -->
+<script lang="ts">
+    import SimplePDFViewer from '$lib/components/SimplePDFViewer.svelte';
+    import { onMount } from 'svelte';
+    
+    let pdfUrl: string | null = null;
+    let file: File | null = null;
+    
+    async function handleFileUpload(event) {
+      file = event.target.files[0];
+      
+      if (file && file.type === 'application/pdf') {
+        // Enviar el archivo al backend
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+          const response = await fetch('http://localhost:7860/api/upload-pdf', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            pdfUrl = data.url; // URL del PDF procesado
+          } else {
+            console.error('Error al subir el PDF');
+          }
+        } catch (error) {
+          console.error('Error de red:', error);
+        }
+      }
+    }
+  </script>
+  
+  <div class="container">
+    <h1>Visor de PDF</h1>
+    
+    <div class="upload-section">
+      <input 
+        type="file" 
+        accept="application/pdf" 
+        on:change={handleFileUpload}
+      />
+      <p class="help-text">Sube un archivo PDF para visualizarlo</p>
+    </div>
+    
+    <SimplePDFViewer {pdfUrl} height={700} />
+  </div>
+  
+  <style>
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .upload-section {
+      margin-bottom: 20px;
+    }
+    
+    .help-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>

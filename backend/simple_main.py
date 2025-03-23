@@ -4,6 +4,10 @@ from fastapi.responses import FileResponse
 import os
 import uuid
 import shutil
+from pydantic import BaseModel
+
+class Question(BaseModel):
+    question: str
 
 app = FastAPI()
 
@@ -64,7 +68,33 @@ async def get_pdf_basic(file_id: str):
     
     return FileResponse(file_path, media_type="application/pdf")
 
+# Endpoint simplificado para preguntas
+@app.post("/api/ask/{document_id}")
+async def ask_question(document_id: str, query: Question):
+    file_path = os.path.join(UPLOAD_DIR, f"{document_id}.pdf")
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="PDF no encontrado")
+    
+    # Respuesta simulada
+    responses = {
+        "título": f"Este documento se titula 'Documento PDF {document_id}'",
+        "autor": "El autor de este documento es Jonathan",
+        "fecha": "Este documento fue creado recientemente",
+        "contenido": "Este documento trata sobre arquitectura de software y patrones de diseño MVC"
+    }
+    
+    # Buscar una palabra clave simple en la pregunta
+    for keyword, response in responses.items():
+        if keyword in query.question.lower():
+            return {"answer": response, "document_id": document_id}
+    
+    return {
+        "answer": "No tengo suficiente información para responder a esta pregunta específica. ¿Podrías reformularla?",
+        "document_id": document_id
+    }
+
 # Endpoint raíz
 @app.get("/")
 async def root():
-    return {"message": "Bienvenido a la API de LectorPDF"}
+    return {"message": "Bienvenido a la API de LectorPDF"} 

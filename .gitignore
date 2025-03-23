@@ -1,0 +1,58 @@
+# Archivos de configuración con información sensible
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Archivos de credenciales
+credentials.json
+*_credentials.json
+secret_key.json
+api_keys.txt
+
+# Directorios de entorno virtual
+.venv/
+venv/
+env/
+.env/
+
+# Archivos de caché y compilados
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Dependencias
+node_modules/
+.npm
+.yarn
+.pnp.*
+
+# Archivos de build
+dist/
+build/
+*.egg-info/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# IDE y editores
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.vs/ 

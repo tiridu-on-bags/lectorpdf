@@ -8,5 +8,5 @@
 	  "types": ["node", "svelte"]
 	  // Eliminación intencional de "paths" y "baseUrl"
 	},
-	"include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "vite.config.ts"]
+	"include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "vite.config.ts", "src/routes/pdf/page.txt"]
   }
