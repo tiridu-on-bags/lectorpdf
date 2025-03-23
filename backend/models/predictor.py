@@ -11,7 +11,7 @@ def predict_something(input_data):
     """
     # Implementa tu lógica aquí
     # Por ejemplo:
-    return {
+    return { 
         "processed_value": input_data["value"] * 2,
         "prediction": "ejemplo"
     }  # Eliminado el punto extra que causaría error

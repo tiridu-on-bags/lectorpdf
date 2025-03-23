@@ -1,74 +1,82 @@
 // src/lib/stores/server-status.ts
 import { writable, derived } from 'svelte/store';
 
-// Configuración de la API
-const API_URL = import.meta.env.VITE_GRADIO_API_URL || 'http://localhost:7860/api';
-const HEALTH_CHECK_INTERVAL = 5000; // Intervalo de comprobación en ms
+// Configuración consistente con cliente API
+const API_CONFIG = {
+  baseUrl: import.meta.env.VITE_GRADIO_API_URL || 'http://localhost:7860',
+  healthEndpoint: '/api/health',
+  checkInterval: 5000
+};
 
-// Interfaz para el estado del servidor
+// Interfaz para estado del servidor - patrón Value Object
 interface ServerStatusState {
   isOnline: boolean;
   lastCheck: Date | null;
   error: string | null;
 }
 
-// Estado inicial
-const initialState: ServerStatusState = {
-  isOnline: false,
-  lastCheck: null,
-  error: null
-};
-
-// Crear el store para el estado del servidor
+// Implementación del patrón Observer con Store
 function createServerStatusStore() {
+  // Estado inicial
+  const initialState: ServerStatusState = {
+    isOnline: false,
+    lastCheck: null,
+    error: null
+  };
+
   const { subscribe, set, update } = writable<ServerStatusState>(initialState);
 
-  // Función para comprobar el estado del servidor
-  async function checkServerStatus() {
+  // Verificación de estado - patrón Circuit Breaker
+  async function checkServerStatus(): Promise<boolean> {
     try {
-      // Intentar realizar una petición al endpoint de salud del servidor
-      const response = await fetch(`${API_URL}/health`, {
+      // Petición con timeout - patrón Timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.healthEndpoint}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         },
-        // Timeout para evitar esperas largas si el servidor no responde
-        signal: AbortSignal.timeout(3000)
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
-      if (response.ok) {
-        update(state => ({
-          ...state,
-          isOnline: true,
-          lastCheck: new Date(),
-          error: null
-        }));
-        return true;
-      } else {
-        throw new Error(`El servidor respondió con código: ${response.status}`);
-      }
+      // Actualización del estado
+      const isOnline = response.ok;
+      update(state => ({
+        ...state,
+        isOnline,
+        lastCheck: new Date(),
+        error: isOnline ? null : `El servidor respondió con código: ${response.status}`
+      }));
+      
+      return isOnline;
     } catch (error) {
+      // Manejo de errores de red
       update(state => ({
         ...state,
         isOnline: false,
         lastCheck: new Date(),
         error: error instanceof Error ? error.message : 'Error de conexión desconocido'
       }));
+      
       return false;
     }
   }
 
-  // Función para iniciar el intervalo de comprobación del estado
+  // Gestión de ciclo de vida - patrón Lifecycle
   let intervalId: ReturnType<typeof setInterval> | null = null;
 
   function startMonitoring() {
-    if (intervalId) return; // Evitar iniciar múltiples intervalos
+    if (intervalId) return;
     
-    // Comprobar inmediatamente al iniciar
+    // Verificación inmediata
     checkServerStatus();
     
-    // Establecer el intervalo para comprobaciones periódicas
-    intervalId = setInterval(checkServerStatus, HEALTH_CHECK_INTERVAL);
+    // Monitoreo periódico
+    intervalId = setInterval(checkServerStatus, API_CONFIG.checkInterval);
   }
 
   function stopMonitoring() {
@@ -78,11 +86,12 @@ function createServerStatusStore() {
     }
   }
 
-  // Iniciar monitoreo automáticamente en el cliente (no en SSR)
+  // Inicialización automática en cliente
   if (typeof window !== 'undefined') {
     startMonitoring();
   }
 
+  // Interfaz pública del store
   return {
     subscribe,
     checkNow: checkServerStatus,
@@ -92,17 +101,13 @@ function createServerStatusStore() {
   };
 }
 
-// Exportar la instancia del store
+// Exportación de store singleton
 export const serverStatus = createServerStatusStore();
 
-// Store derivado para mensajes de estado amigables
+// Store derivado para mensajes de UI - patrón Decorator
 export const serverStatusMessage = derived(
   serverStatus,
-  $serverStatus => {
-    if ($serverStatus.isOnline) {
-      return 'Conectado';
-    } else {
-      return $serverStatus.error ? `Desconectado: ${$serverStatus.error}` : 'Desconectado';
-    }
-  }
+  $status => $status.isOnline 
+    ? 'Conectado' 
+    : $status.error ? `Desconectado: ${$status.error}` : 'Desconectado'
 );

@@ -1,9 +1,6 @@
-// src/lib/api/client.ts
-import { serverStatus } from '$lib/stores/server-status';
-import { get } from 'svelte/store';
-
-// Configuración de la API
-const API_URL = import.meta.env.VITE_GRADIO_API_URL || 'http://localhost:7860/api';
+// src/routes/api/client.ts
+// Configuración correcta de la API utilizando la variable de entorno adecuada
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7860';
 
 // Interfaz para los parámetros de predicción
 interface PredictionParams {
@@ -11,61 +8,54 @@ interface PredictionParams {
   text?: string;
 }
 
-// Función para realizar la petición de predicción
+// Solución directa - Enviar datos exactamente como espera el backend
 export async function fetchPrediction(params: PredictionParams) {
-  // Comprobar si el servidor está online
-  const isServerOnline = get(serverStatus).isOnline;
-  if (!isServerOnline) {
-    // Si no está en línea, intentar comprobar una vez más
-    const nowOnline = await serverStatus.checkNow();
-    if (!nowOnline) {
-      throw new Error('El servidor no está disponible. Por favor, verifica la conexión.');
-    }
-  }
-
   try {
-    // Estructura correcta según la expectativa de la API FastAPI
-    const requestBody = {
-      data: [
-        params.value,
-        params.text !== undefined ? params.text : null  // Para el error 422 
-      ]
-    };
-
-    console.log('Enviando petición:', requestBody);
-    
-    const response = await fetch(`${API_URL}/predict`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
-
+    // Verificar estado del servidor primero
+    const response = await fetch(`${API_URL}/api/health`);
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error en respuesta:', response.status, errorText);
-      throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+      throw new Error('El servidor no está disponible');
     }
-
-    const data = await response.json();
     
-    // Verificar la estructura esperada de la respuesta
-    if (!data || !data.data) {
-      throw new Error('Respuesta del servidor inválida');
+    // Usar el formato exacto que funciona con curl
+    const payload = JSON.stringify({
+      data: [
+        Number(params.value), // Asegurar que es un número
+        String(params.text || "") // Asegurar que es un string
+      ]
+    });
+    
+    console.log('Enviando datos:', payload);
+    
+    // Petición simplificada - USAR ENDPOINT FLEXIBLE que sabemos que funciona
+    const fetchResponse = await fetch(`${API_URL}/api/predict-flexible`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload
+    });
+    
+    // Manejar errores con más detalle
+    if (!fetchResponse.ok) {
+      const errorText = await fetchResponse.text();
+      console.error('Error en respuesta:', fetchResponse.status, errorText);
+      throw new Error(`Error ${fetchResponse.status}: ${errorText}`);
     }
-
-    // Procesar y devolver la respuesta estructurada
+    
+    // Procesar la respuesta
+    const data = await fetchResponse.json();
+    console.log('Respuesta recibida:', data);
+    
     return {
-      processed_value: parseFloat(data.data[0]) || 0,
-      prediction: data.data[1] || 'Sin predicción',
+      processed_value: data.data[0],
+      prediction: data.data[1],
+      status: data.status,
+      message: data.message,
       raw_response: data
     };
   } catch (error) {
-    console.error('Error al realizar la predicción:', error);
-    throw error instanceof Error 
-      ? error 
+    console.error('Error:', error);
+    throw error instanceof Error
+      ? error
       : new Error('Error desconocido al procesar la solicitud');
   }
 }

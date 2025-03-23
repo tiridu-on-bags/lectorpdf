@@ -50,7 +50,7 @@ interface BackendResponse<T> {
 export async function fetchPrediction<T, R>(inputData: T): Promise<R> {
   return withRetry(async () => {
     // Gradio espera los datos en un formato específico
-    const response = await fetch(`${API_URL}/api/predict`, {
+    const response = await fetch(`${API_URL}/api/predict-flexible`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

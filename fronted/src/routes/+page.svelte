@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { fetchPrediction } from '$lib/api/client';
+  import { predictWithFlexibleAPI } from '$lib/api/flexible-client';
   import { serverStatus, serverStatusMessage } from '$lib/stores/server-status';
   import { predictionCache } from '$lib/stores/prediction-cache';
   
@@ -21,8 +21,13 @@
     loading = true;
     error = '';
     try {
-      const response = await fetchPrediction({ value: inputValue, text: inputText });
-      result = response as ResultData; // Aseguramos que sea del tipo ResultData
+      // Usar el cliente flexible que sabemos que funciona
+      const response = await predictWithFlexibleAPI({ 
+        value: inputValue, 
+        text: inputText 
+      });
+      
+      result = response;
       predictionCache.set(`${inputValue}-${inputText}`, response);
     } catch (e) {
       error = e instanceof Error ? e.message : 'Error desconocido';
