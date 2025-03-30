@@ -4,6 +4,7 @@
 
 source backend/venv/bin/activate
 python api.py
+uvicorn api:app --reload
 
 
 ## npm install
