@@ -8,7 +8,7 @@
 
 ## npm install
 ## npm run dev
-
+## uvicorn api:app --reload
 
 
 # Diseño 

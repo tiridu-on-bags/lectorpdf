@@ -1,6 +1,7 @@
 // src/routes/api/client.ts
-// Configuración correcta de la API utilizando la variable de entorno adecuada
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7860';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 
 // Interfaz para los parámetros de predicción
 interface PredictionParams {
