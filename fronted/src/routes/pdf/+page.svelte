@@ -13,7 +13,7 @@
   
   // Obtener la URL correcta para la carga de PDFs
   function getUploadUrl() {
-    const baseUrl = 'http://localhost:7860';
+    const baseUrl = 'http://localhost:8000';
     // Usar siempre el endpoint que funciona
     return `${baseUrl}/api/upload-basic`;
   }

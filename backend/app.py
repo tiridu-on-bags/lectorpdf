@@ -11,7 +11,7 @@ app = FastAPI(title="ML Gateway API")
 # Configuración CORS - crítico para comunicación cross-origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # SvelteKit dev server
+    allow_origins=["http://localhost:8000"],  # SvelteKit dev server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
