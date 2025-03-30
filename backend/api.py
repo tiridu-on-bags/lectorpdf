@@ -4,7 +4,10 @@ from fastapi.responses import FileResponse
 import os
 import uuid
 import shutil
+from pydantic import BaseModel
+from typing import List, Union, Any
 
+# IMPORTANTE: Definir app ANTES de usar los decoradores
 app = FastAPI()
 
 # Configurar CORS para permitir solicitudes desde el frontend
@@ -19,6 +22,25 @@ app.add_middleware(
 # Crear directorio para uploads si no existe
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Definir el modelo de datos después de app pero antes de usarlo
+class FlexibleInput(BaseModel):
+    data: List[Any]
+
+@app.post("/api/predict-flexible")
+async def predict_flexible(input_data: FlexibleInput):
+    # Implementación básica - ajusta según tus necesidades
+    value = input_data.data[0] if len(input_data.data) > 0 else 0
+    text = input_data.data[1] if len(input_data.data) > 1 else ""
+    
+    # Lógica de procesamiento aquí
+    processed_value = value * 2  # Ejemplo simple
+    
+    return {
+        "status": "success",
+        "message": "Predicción realizada correctamente",
+        "data": [processed_value, f"Procesado: {text}"]
+    }
 
 # Endpoint de prueba simple
 @app.get("/test")
@@ -68,3 +90,8 @@ async def get_pdf_basic(file_id: str):
 @app.get("/")
 async def root():
     return {"message": "Bienvenido a la API de LectorPDF"}
+
+# Si necesitas iniciar el servidor directamente con "python api.py"
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

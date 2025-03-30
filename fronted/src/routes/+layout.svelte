@@ -1,4 +1,6 @@
 <script lang="ts">
+	
+	import "@pdfslick/core/dist/pdf_viewer.css";
 	import Header from './Header.svelte';
 	import '../app.css';
 	import "@pdfslick/core/dist/pdf_viewer.css";

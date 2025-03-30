@@ -1,7 +1,7 @@
 // src/routes/api/client-alt.ts
 // Cliente alternativo simplificado usando fetch directamente
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7860';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /**
  * Función simplificada para realizar peticiones al backend 

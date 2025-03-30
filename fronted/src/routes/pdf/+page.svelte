@@ -1,8 +1,9 @@
-<!-- src/routes/pdf-viewer/+page.svelte -->
+<!-- src/routes/pdf/+page.svelte -->
 <script lang="ts">
+  // IMPORTANTE: Importar los estilos CSS de PDFSlick
+  import "@pdfslick/core/dist/pdf_viewer.css";
   import { onMount } from 'svelte';
   import SimplePDFViewer from '$lib/components/SimplePDFViewer.svelte';
-  import PDFQuestionAnswering from '$lib/components/PDFQuestionAnswering.svelte';
   
   let pdfUrl: string | null = null;
   let file: File | null = null;
@@ -11,16 +12,15 @@
   let documentId = '';
   let pdfLoaded = false;
   
-  // Obtener la URL correcta para la carga de PDFs
-  function getUploadUrl() {
-    const baseUrl = 'http://localhost:8000';
-    // Usar siempre el endpoint que funciona
-    return `${baseUrl}/api/upload-basic`;
+  // Registrar cambios en pdfUrl para depuración
+  $: if (pdfUrl) {
+    console.log('pdfUrl actualizada:', pdfUrl);
   }
   
-  // Función mejorada para manejar la carga de archivos
-  async function handleFileUpload(event) {
-    const selectedFile = event.target.files[0];
+  async function handleFileUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const selectedFile = input.files?.[0] || null;
+    
     if (!selectedFile || selectedFile.type !== 'application/pdf') {
       uploadError = 'Por favor selecciona un archivo PDF válido';
       return;
@@ -29,83 +29,69 @@
     file = selectedFile;
     isUploading = true;
     uploadError = '';
-    pdfLoaded = false;
+    pdfUrl = null; // Reset URL to force reload
     
     try {
       // Crear FormData para enviar el archivo
       const formData = new FormData();
       formData.append('file', file);
       
-      // Enviar petición con logs detallados
       console.log('Enviando archivo al servidor...');
       console.log('Archivo:', file.name, file.size, file.type);
       
-      const url = getUploadUrl();
-      console.log('Usando endpoint:', url);
+      const endpoint = 'http://localhost:8000/api/upload-basic';
+      console.log('Usando endpoint:', endpoint);
       
-      // Comprobar si el servidor está disponible
-      try {
-        const healthCheck = await fetch(`http://localhost:8000/api/health`);
-        console.log('Estado del servidor:', healthCheck.status, healthCheck.ok ? 'OK' : 'Error');
-      } catch (healthError) {
-        console.error('Error al verificar estado del servidor:', healthError);
-        throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté ejecutándose en el puerto 7860.');
-      }
-      
-      // Usar la URL del endpoint que funciona
-      const response = await fetch(url, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData
       });
       
-      console.log('Estado de respuesta:', response.status);
-      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error en texto:', errorText);
-        throw new Error(`Error al subir el archivo: ${response.status} - ${errorText}`);
+        throw new Error(`Error al subir el archivo: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log('Respuesta de carga:', data);
+      console.log('Respuesta del servidor:', data);
       
-      // Actualizar la URL y el ID del documento
-      pdfUrl = `http://localhost:8000${data.url}`;
-      documentId = data.document_id;
-      pdfLoaded = true;
+      // CAMBIO IMPORTANTE: Esperar un momento antes de asignar la URL
+      // Esto permite que el componente se actualice correctamente
+      setTimeout(() => {
+        pdfUrl = `http://localhost:8000${data.url}`;
+        documentId = data.document_id || '';
+        pdfLoaded = true;
+        isUploading = false;
+        console.log('PDF URL asignada:', pdfUrl);
+      }, 100);
       
     } catch (error) {
       console.error('Error capturado:', error);
       uploadError = error.message || 'Error desconocido al subir el archivo';
-      file = null;
-    } finally {
       isUploading = false;
+      file = null;
     }
   }
   
-  // Función para hacer preguntas (se implementará más adelante)
-  async function askQuestion(question) {
-    if (!documentId || !question) return;
-    
+  // Función para verificar si una URL es válida y accesible
+  async function checkUrl(url: string): Promise<boolean> {
     try {
-      const response = await fetch(`http://localhost:8000/api/ask/${documentId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ question })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data.answer;
+      const response = await fetch(url, { method: 'HEAD' });
+      return response.ok;
     } catch (error) {
-      console.error('Error al hacer la pregunta:', error);
-      return null;
+      console.error('Error verificando URL:', error);
+      return false;
     }
+  }
+  
+  // Verificar la URL del PDF cuando cambie
+  $: if (pdfUrl) {
+    checkUrl(pdfUrl).then(isValid => {
+      if (!isValid) {
+        console.error('La URL del PDF no es accesible:', pdfUrl);
+      } else {
+        console.log('URL del PDF verificada y accesible');
+      }
+    });
   }
 </script>
 
@@ -122,7 +108,11 @@
       disabled={isUploading}
     />
     <label for="pdf-upload" class="file-label">
-      {isUploading ? 'Procesando...' : 'Seleccionar PDF'}
+      {#if isUploading}
+        Procesando...
+      {:else}
+        Seleccionar PDF
+      {/if}
     </label>
     
     {#if file}
@@ -134,18 +124,54 @@
     <div class="error-message">{uploadError}</div>
   {/if}
   
+  <!-- Contenedor principal para el visor de PDF y las preguntas -->
   <div class="content-grid">
-    <!-- Contenedor de visualización -->
+    <!-- Contenedor del visor con altura fija -->
     <div class="viewer-container">
-      <SimplePDFViewer pdfUrl={pdfUrl} height={600} />
+      <!-- Debug info -->
+      {#if pdfUrl}
+        <div class="debug-bar">
+          URL: {pdfUrl}
+        </div>
+      {/if}
+      
+      <!-- Solo renderizamos el componente si tenemos una URL -->
+      <SimplePDFViewer 
+        pdfUrl={pdfUrl} 
+        height={550} 
+      />
     </div>
     
-    <!-- Componente de preguntas sobre el PDF -->
-    <PDFQuestionAnswering documentId={documentId} isEnabled={pdfLoaded} />
+    <!-- Panel de preguntas -->
+    <div class="questions-panel">
+      <h2>Preguntas sobre el PDF</h2>
+      
+      {#if !pdfLoaded}
+        <p class="info-message">Carga un documento PDF para poder hacer preguntas sobre su contenido</p>
+      {:else}
+        <!-- Aquí irá el componente de preguntas cuando esté implementado -->
+        <div class="questions-form">
+          <textarea 
+            placeholder="Escribe tu pregunta sobre el documento..." 
+            class="question-input"
+          ></textarea>
+          <button class="submit-btn">Preguntar</button>
+        </div>
+      {/if}
+    </div>
   </div>
 </div>
 
 <style>
+  /* Asegurarnos de que PDFSlick tenga el espacio correcto */
+  :global(.pdfSlickViewer) {
+    margin: 0 !important;
+  }
+  
+  :global(.pdfSlickContainer .pdfViewer) {
+    position: relative;
+  }
+  
   .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -153,8 +179,15 @@
   }
   
   h1 {
-    color: #333;
+    font-size: 28px;
     margin-bottom: 20px;
+    color: #333;
+  }
+  
+  h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+    color: #333;
   }
   
   .upload-section {
@@ -174,11 +207,12 @@
     color: white;
     border-radius: 4px;
     cursor: pointer;
+    font-weight: 500;
   }
   
   .file-name {
-    font-size: 0.9em;
-    color: #333;
+    font-size: 14px;
+    color: #555;
   }
   
   .error-message {
@@ -189,6 +223,15 @@
     margin-bottom: 20px;
   }
   
+  .debug-bar {
+    background-color: #f0f8ff;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #0066cc;
+    border-bottom: 1px solid #ccc;
+    word-break: break-all;
+  }
+  
   .content-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -196,14 +239,57 @@
   }
   
   .viewer-container {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
     border-radius: 8px;
     overflow: hidden;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    height: 600px; /* Altura fija para el contenedor */
+  }
+  
+  .questions-panel {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .info-message {
+    color: #666;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .questions-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .question-input {
+    width: 100%;
+    height: 100px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+    font-family: inherit;
+  }
+  
+  .submit-btn {
+    padding: 8px 16px;
+    background-color: #0072e5;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    align-self: flex-end;
   }
   
   @media (min-width: 1024px) {
     .content-grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 2fr 1fr;
     }
   }
 </style>

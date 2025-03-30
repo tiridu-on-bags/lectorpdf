@@ -1,5 +1,6 @@
 // flexible-client.ts - Cliente optimizado para el endpoint flexible
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7860';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'; //Puerto 8000 configuarado en el backend
 
 // Interfaz para parámetros
 export interface PredictionParams {
