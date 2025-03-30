@@ -45,7 +45,7 @@
       
       // Comprobar si el servidor está disponible
       try {
-        const healthCheck = await fetch(`http://localhost:7860/api/health`);
+        const healthCheck = await fetch(`http://localhost:8000/api/health`);
         console.log('Estado del servidor:', healthCheck.status, healthCheck.ok ? 'OK' : 'Error');
       } catch (healthError) {
         console.error('Error al verificar estado del servidor:', healthError);
@@ -70,7 +70,7 @@
       console.log('Respuesta de carga:', data);
       
       // Actualizar la URL y el ID del documento
-      pdfUrl = `http://localhost:7860${data.url}`;
+      pdfUrl = `http://localhost:8000${data.url}`;
       documentId = data.document_id;
       pdfLoaded = true;
       
@@ -88,7 +88,7 @@
     if (!documentId || !question) return;
     
     try {
-      const response = await fetch(`http://localhost:7860/api/ask/${documentId}`, {
+      const response = await fetch(`http://localhost:8000/api/ask/${documentId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
