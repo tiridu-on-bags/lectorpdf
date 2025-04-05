@@ -14,7 +14,7 @@ app = FastAPI()
 # Configurar CORS para permitir solicitudes desde el frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],  # Origen específico del frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,10 +63,21 @@ async def upload_basic(file: UploadFile = File(...)):
 async def get_pdf_basic(file_id: str):
     file_path = os.path.join(UPLOAD_DIR, f"{file_id}.pdf")
     
+    print(f"Solicitando archivo: {file_path}")
+    
     if not os.path.exists(file_path):
+        print(f"Archivo no encontrado: {file_path}")
         raise HTTPException(status_code=404, detail="PDF no encontrado")
     
-    return FileResponse(file_path, media_type="application/pdf")
+    try:
+        return FileResponse(
+            path=file_path, 
+            media_type="application/pdf",
+            filename=f"{file_id}.pdf"
+        )
+    except Exception as e:
+        print(f"Error al servir el archivo: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al servir el archivo: {str(e)}")
 
 # Endpoint simplificado para preguntas
 @app.post("/api/ask/{document_id}")

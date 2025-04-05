@@ -168,6 +168,14 @@
     margin: 0 !important;
   }
   
+  :global(.pdfSlickContainer) {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+  
   :global(.pdfSlickContainer .pdfViewer) {
     position: relative;
   }
@@ -239,6 +247,7 @@
   }
   
   .viewer-container {
+    position: relative;
     border: 1px solid #ddd;
     border-radius: 8px;
     overflow: hidden;
