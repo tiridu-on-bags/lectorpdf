@@ -15,7 +15,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -84,7 +84,34 @@ async def get_pdf_basic(file_id: str):
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="PDF no encontrado")
     
-    return FileResponse(file_path, media_type="application/pdf")
+    # Configuraciones críticas para streaming de PDF
+    return FileResponse(
+        path=file_path,
+        media_type="application/pdf",
+        headers={
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=3600"
+        }
+    )
+# Agregar handler específico para OPTIONS y HEAD
+@app.options("/api/pdf-basic/{file_id}")
+@app.head("/api/pdf-basic/{file_id}")
+async def pdf_preflight(file_id: str):
+    file_path = os.path.join(UPLOAD_DIR, f"{file_id}.pdf")
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="PDF no encontrado")
+    
+    # Respuesta vacía con headers adecuados para OPTIONS/HEAD
+    return Response(
+        status_code=200,
+        headers={
+            "Content-Type": "application/pdf",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Origin": "*"
+        }
+    )
+    
 
 # Endpoint raíz
 @app.get("/")

@@ -1,267 +1,199 @@
 <!-- src/lib/components/SimplePDFViewer.svelte -->
 <script lang="ts">
-  import { onMount, onDestroy, afterUpdate } from 'svelte';
-  import type { PDFSlick as PDFSlickType } from '@pdfslick/core';
-  
-  // Para asegurar que los estilos estén disponibles
-  import "@pdfslick/core/dist/pdf_viewer.css";
+  import { onMount, onDestroy, tick } from 'svelte';
+  import { browser } from '$app/environment';
+  import * as pdfjs from 'pdfjs-dist';
   
   export let pdfUrl: string | null = null;
   export let height: number = 600;
   
-  let container: HTMLDivElement;
-  let pdfSlick: PDFSlickType | null = null;
-  let pageNumber = 1;
-  let numPages = 0;
-  let isLoading = false;
-  let error = '';
-  let unsubscribe: (() => void) | undefined;
-  let pdfLoadAttempted = false;
+  let pdfContainer: HTMLElement | null = null;
+  let loadingTask: any = null;
+  let error: string | null = null;
+  let renderState = {
+    loading: false,
+    initialized: false,
+    error: null as string | null
+  };
   
-  // Registro de cambios en pdfUrl para debugging
-  $: if (pdfUrl) {
-    console.log('SimplePDFViewer - URL recibida:', pdfUrl);
-    pdfLoadAttempted = false; // Reset cuando cambia la URL
+  // Configuración del worker PDF.js
+  $: if (browser && !pdfjs.GlobalWorkerOptions.workerSrc) {
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
   }
   
-  onMount(async () => {
+  onMount(() => {
     console.log('SimplePDFViewer - Componente montado');
+    return () => {
+      // Patrón Resource Management: Limpieza de recursos
+      if (loadingTask) {
+        loadingTask.destroy?.();
+        loadingTask = null;
+      }
+    };
   });
-  
-  afterUpdate(async () => {
-    // Si tenemos URL, contenedor, y no hemos intentado cargar aún
-    if (pdfUrl && container && !pdfLoadAttempted) {
-      pdfLoadAttempted = true; // Marcar como intentado para evitar múltiples cargas
-      console.log('SimplePDFViewer - Intentando cargar PDF después de actualización:', pdfUrl);
-      await loadPDF(pdfUrl);
-    }
-  });
-  
-  async function loadPDF(url: string) {
-    if (!url) {
-      console.warn('SimplePDFViewer - URL vacía, no se puede cargar PDF');
-      return;
-    }
-    
-    if (!container) {
-      console.warn('SimplePDFViewer - Contenedor no disponible, no se puede cargar PDF');
-      return;
-    }
-    
-    console.log('SimplePDFViewer - Iniciando carga de PDF:', url);
-    isLoading = true;
-    error = '';
-    
-    try {
-      // Intentar verificar si la URL es accesible
-      try {
-        const response = await fetch(url, { method: 'HEAD' });
-        if (!response.ok) {
-          throw new Error(`URL no accesible: ${response.status}`);
-        }
-        console.log('SimplePDFViewer - URL verificada y accesible');
-      } catch (e) {
-        console.warn('SimplePDFViewer - No se pudo verificar URL, intentando cargar de todos modos:', e);
-      }
-      
-      // Limpiar instancia anterior si existe
-      if (pdfSlick && unsubscribe) {
-        unsubscribe();
-        pdfSlick = null;
-      }
-      
-      // Verificar los estilos del contenedor
-      const computedStyle = window.getComputedStyle(container);
-      console.log('SimplePDFViewer - Estilos del contenedor:', {
-        position: computedStyle.position,
-        width: computedStyle.width,
-        height: computedStyle.height,
-        top: computedStyle.top,
-        left: computedStyle.left
-      });
-      
-      // Forzar posición absoluta en el contenedor si no la tiene
-      if (computedStyle.position !== 'absolute') {
-        console.warn('SimplePDFViewer - El contenedor no tiene posición absoluta, forzando...');
-        container.style.position = 'absolute';
-        container.style.top = '0';
-        container.style.left = '0';
-        container.style.right = '0';
-        container.style.bottom = '0';
-        container.style.width = '100%';
-        container.style.height = '100%';
-      }
-      
-      // Importar dinámicamente PDFSlick
-      const { create, PDFSlick } = await import('@pdfslick/core');
-      
-      // Crear store y nueva instancia
-      const store = create();
-      
-      pdfSlick = new PDFSlick({
-        container,
-        store,
-        options: {
-          scaleValue: 'page-fit'
-        }
-      });
-      
-      // Cargar documento con manejo explícito de promesa
-      console.log('SimplePDFViewer - Cargando documento:', url);
-      try {
-        await pdfSlick.loadDocument(url);
-        console.log('SimplePDFViewer - Documento cargado correctamente');
-      } catch (loadError) {
-        console.error('SimplePDFViewer - Error al cargar documento:', loadError);
-        throw loadError;
-      }
-      
-      store.setState({ pdfSlick });
-      
-      // Suscribirse a cambios de estado
-      unsubscribe = store.subscribe((s: any) => {
-        pageNumber = s.pageNumber;
-        numPages = s.numPages;
-      });
-      
-      console.log('SimplePDFViewer - PDF cargado correctamente:', { pageNumber, numPages });
-    } catch (e) {
-      console.error('SimplePDFViewer - Error al cargar PDF:', e);
-      error = e.message || 'Error al cargar el PDF';
-    } finally {
-      isLoading = false;
-    }
-  }
   
   onDestroy(() => {
-    if (unsubscribe) unsubscribe();
     console.log('SimplePDFViewer - Componente destruido');
   });
   
-  function prevPage() {
-    if (pdfSlick && pageNumber > 1) {
-      pdfSlick.gotoPage(pageNumber - 1);
+  // Aplicación del patrón Circuit Breaker para prevenir fallos en cascada
+  async function loadPDF(url: string) {
+    if (!url || !browser) return;
+    
+    // Prevenir múltiples cargas simultáneas (patrón Guard)
+    if (renderState.loading) return;
+    
+    console.log('SimplePDFViewer - Iniciando carga de PDF:', url);
+    renderState.loading = true;
+    renderState.error = null;
+    
+    try {
+      // Esperar a que el DOM se actualice antes de manipularlo (evita errores de referencia)
+      await tick();
+      
+      // Verificar que el contenedor existe en el DOM
+      if (!pdfContainer) {
+        throw new Error('Contenedor PDF no disponible en el DOM');
+      }
+      
+      // Implementación del patrón de Retry con backoff exponencial
+      let retries = 0;
+      const maxRetries = 3;
+      
+      while (retries < maxRetries) {
+        try {
+          // Cargar el documento (sin verificación previa por HEAD)
+          loadingTask = pdfjs.getDocument(url);
+          const pdf = await loadingTask.promise;
+          
+          // Renderizar la primera página
+          const page = await pdf.getPage(1);
+          const viewport = page.getViewport({ scale: 1.0 });
+          
+          // Ajustar contenedor
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          
+          // Calcular escala para ajuste al contenedor 
+          const containerWidth = pdfContainer.clientWidth;
+          const scale = containerWidth / viewport.width;
+          const scaledViewport = page.getViewport({ scale });
+          
+          canvas.height = scaledViewport.height;
+          canvas.width = scaledViewport.width;
+          
+          // Limpiar contenedor y añadir canvas
+          pdfContainer.innerHTML = '';
+          pdfContainer.appendChild(canvas);
+          
+          // Renderizar el PDF
+          await page.render({
+            canvasContext: context,
+            viewport: scaledViewport
+          }).promise;
+          
+          renderState.initialized = true;
+          console.log('SimplePDFViewer - PDF cargado exitosamente');
+          break; // Salir del bucle de reintentos si es exitoso
+          
+        } catch (err) {
+          retries++;
+          if (retries >= maxRetries) throw err;
+          
+          // Backoff exponencial
+          const delay = Math.pow(2, retries) * 100;
+          await new Promise(resolve => setTimeout(resolve, delay));
+          console.warn(`SimplePDFViewer - Reintento ${retries}/${maxRetries}`);
+        }
+      }
+      
+    } catch (err) {
+      console.error('SimplePDFViewer - Error al cargar PDF:', err);
+      renderState.error = err.message || 'Error al cargar el PDF';
+      
+      // Fallback visual
+      if (pdfContainer) {
+        pdfContainer.innerHTML = `
+          <div class="pdf-error">
+            <p>No se pudo cargar el PDF. ${renderState.error}</p>
+            <button id="retry-pdf">Reintentar</button>
+          </div>
+        `;
+        
+        // Event binding seguro
+        setTimeout(() => {
+          const retryBtn = pdfContainer?.querySelector('#retry-pdf');
+          retryBtn?.addEventListener('click', () => loadPDF(url));
+        }, 0);
+      }
+    } finally {
+      renderState.loading = false;
     }
   }
   
-  function nextPage() {
-    if (pdfSlick && pageNumber < numPages) {
-      pdfSlick.gotoPage(pageNumber + 1);
-    }
+  // Efecto reactivo para cambios de URL
+  $: if (pdfUrl) {
+    console.log('SimplePDFViewer - URL recibida:', pdfUrl);
+    loadPDF(pdfUrl);
   }
 </script>
 
-<div class="pdf-container" style="height: {height}px;">
-  {#if isLoading}
-    <div class="loading">Cargando PDF...</div>
-  {:else if error}
-    <div class="error">{error}</div>
-  {:else if !pdfUrl}
-    <div class="empty-state">
-      <p>No hay PDF cargado</p>
+<div class="pdf-viewer-container" style="height: {height}px;">
+  {#if renderState.loading}
+    <div class="loading-indicator">
+      <span class="spinner"></span>
+      <p>Cargando documento...</p>
     </div>
-  {:else}
-    <div class="viewer-wrapper">
-      <!-- Contenedor con position: absolute -->
-      <div class="pdfSlickContainer" bind:this={container}>
-        <div class="pdfSlickViewer pdfViewer"></div>
-      </div>
-    </div>
-    
-    {#if numPages > 0}
-      <div class="controls">
-        <button on:click={prevPage} disabled={pageNumber <= 1}>
-          Anterior
-        </button>
-        <span class="page-info">Página {pageNumber} de {numPages}</span>
-        <button on:click={nextPage} disabled={pageNumber >= numPages}>
-          Siguiente
-        </button>
-      </div>
-    {/if}
   {/if}
+  
+  <!-- Contenedor de PDF con binding seguro -->
+  <div class="pdf-container" bind:this={pdfContainer}></div>
 </div>
 
 <style>
-  .pdf-container {
-    width: 100%;
+  .pdf-viewer-container {
     position: relative;
+    width: 100%;
+    overflow: auto;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .pdf-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100%;
+  }
+  
+  .loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: #f5f5f5;
-  }
-  
-  .viewer-wrapper {
-    position: relative;
-    flex: 1;
-    height: calc(100% - 50px);
-  }
-  
-  /* CRÍTICO: El contenedor DEBE tener position: absolute */
-  .pdfSlickContainer {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    overflow: auto;
-  }
-  
-  .empty-state,
-  .loading,
-  .error {
-    display: flex;
-    justify-content: center;
     align-items: center;
-    height: 100%;
-    width: 100%;
-    text-align: center;
-    padding: 20px;
-  }
-  
-  .loading {
-    background: #f0f4f8;
-    color: #0072e5;
-  }
-  
-  .error {
-    background: #fff3f3;
-    color: #e53935;
-  }
-  
-  .controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    padding: 10px;
-    background: #f0f4f8;
-    border-top: 1px solid #ddd;
-    height: 50px;
-  }
-  
-  button {
-    padding: 6px 12px;
-    background: #0072e5;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-  }
-  
-  button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-  }
-  
-  .page-info {
-    font-size: 14px;
     color: #333;
+  }
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 114, 229, 0.2);
+    border-radius: 50%;
+    border-top-color: #0072e5;
+    animation: spin 1s ease-in-out infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .pdf-error {
+    padding: 20px;
+    text-align: center;
+    color: #d32f2f;
   }
 </style>
