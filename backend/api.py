@@ -13,7 +13,7 @@ app = FastAPI()
 # Configurar CORS para permitir solicitudes desde el frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],  # Origen del frontend
     allow_credentials=True,
     allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
     allow_headers=["*"],
@@ -23,9 +23,69 @@ app.add_middleware(
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# Definir el modelo de datos después de app pero antes de usarlo
+# Definir los modelos de datos
 class FlexibleInput(BaseModel):
     data: List[Any]
+
+class TextRequest(BaseModel):
+    text: str
+    document_id: str = None
+
+class QuestionRequest(BaseModel):
+    question: str
+    context: str = None
+    document_id: str = None
+
+# Endpoint para resumir texto
+@app.post("/api/summarize")
+async def summarize_text(request: TextRequest):
+    """
+    Genera un resumen del texto proporcionado.
+    """
+    try:
+        # Simulación - en producción llamaría a un LLM como OpenAI
+        summary = f"Resumen del texto: {request.text[:50]}..."
+        
+        return {
+            "summary": summary,
+            "document_id": request.document_id
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al resumir texto: {str(e)}")
+
+# Endpoint para explicar texto
+@app.post("/api/explain")
+async def explain_text(request: TextRequest):
+    """
+    Genera una explicación para el texto seleccionado.
+    """
+    try:
+        # Simulación - en producción llamaría a un LLM como OpenAI
+        explanation = f"El texto '{request.text[:30]}...' se refiere a un concepto que..."
+        
+        return {
+            "explanation": explanation,
+            "document_id": request.document_id
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al explicar texto: {str(e)}")
+
+# Endpoint para responder preguntas sobre texto seleccionado
+@app.post("/api/ask-selected")
+async def ask_about_text(request: QuestionRequest):
+    """
+    Responde a una pregunta sobre un texto específico seleccionado.
+    """
+    try:
+        # Simulación - en producción usaría el contexto y llamaría a un LLM
+        answer = f"Respuesta a '{request.question}' basada en el contexto seleccionado."
+        
+        return {
+            "answer": answer,
+            "document_id": request.document_id
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al procesar pregunta: {str(e)}")
 
 @app.post("/api/predict-flexible")
 async def predict_flexible(input_data: FlexibleInput):
@@ -81,18 +141,22 @@ async def upload_basic(file: UploadFile = File(...)):
 async def get_pdf_basic(file_id: str):
     file_path = os.path.join(UPLOAD_DIR, f"{file_id}.pdf")
     
+    print(f"Solicitando archivo: {file_path}")
+    
     if not os.path.exists(file_path):
+        print(f"Archivo no encontrado: {file_path}")
         raise HTTPException(status_code=404, detail="PDF no encontrado")
     
-    # Configuraciones críticas para streaming de PDF
-    return FileResponse(
-        path=file_path,
-        media_type="application/pdf",
-        headers={
-            "Accept-Ranges": "bytes",
-            "Cache-Control": "public, max-age=3600"
-        }
-    )
+    try:
+        return FileResponse(
+            path=file_path, 
+            media_type="application/pdf",
+            filename=f"{file_id}.pdf"
+        )
+    except Exception as e:
+        print(f"Error al servir el archivo: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al servir el archivo: {str(e)}")
+
 # Agregar handler específico para OPTIONS y HEAD
 @app.options("/api/pdf-basic/{file_id}")
 @app.head("/api/pdf-basic/{file_id}")
@@ -112,7 +176,6 @@ async def pdf_preflight(file_id: str):
         }
     )
     
-
 # Endpoint raíz
 @app.get("/")
 async def root():
