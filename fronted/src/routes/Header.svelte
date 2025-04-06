@@ -1,82 +1,54 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import logo from '$lib/images/svelte-logo.svg';
-	import github from '$lib/images/github.svg';
+	import { onMount } from 'svelte';
+	import logo from '$lib/images/pdfindex.svg';
+	import pdfindex from '$lib/images/pdfindex.jpg';
 </script>
 
-<header>
-	<div class="corner">
-		<a href="https://svelte.dev/docs/kit">
-			<img src={logo} alt="SvelteKit" />
-		</a>
-	</div>
-
+<header class="header-container">
 	<nav>
-		<svg viewBox="0 0 2 3" aria-hidden="true">
-			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
-		</svg>
 		<ul>
 			<li aria-current={page.url.pathname === '/' ? 'page' : undefined}>
-				<a href="/">Home</a>
+				<div class="fill corner">
+					<a href="/">
+						<img src={logo} alt="PDF Index" class="" />
+					</a>
+				</div>
 			</li>
 			<li aria-current={page.url.pathname.startsWith('/pdf') ? 'page' : undefined}>
-				<a href="/pdf">Pdf</a>
+				<a href="/pdf">PDF</a>
 			</li>
 			<li aria-current={page.url.pathname.startsWith('/simple-upload') ? 'page' : undefined}>
 				<a href="/simple-upload">Subida Simple</a>
 			</li>
 		</ul>
-		<svg viewBox="0 0 2 3" aria-hidden="true">
-			<path d="M0,0 L0,3 C0.5,3 0.5,3 1,2 L2,0 Z" />
-		</svg>
 	</nav>
-
-	<div class="corner">
-		<a href="https://github.com/sveltejs/kit">
-			<img src={github} alt="GitHub" />
-		</a>
-	</div>
 </header>
 
 <style>
-	header {
-		display: flex;
-		justify-content: space-between;
+	/* Definir variables con la paleta de colores */
+	:root {
+		--color-ebony: #2c332d;
+		--color-sage: #747c71;
+		--color-cream: #f9f4e9;
+		--color-khaki: #6d5542;
 	}
 
-	.corner {
-		width: 3em;
-		height: 3em;
-	}
-
-	.corner a {
+	.header-container {
 		display: flex;
-		align-items: center;
-		justify-content: center;
 		width: 100%;
-		height: 100%;
-	}
-
-	.corner img {
-		width: 2em;
-		height: 2em;
-		object-fit: contain;
+		background-color: var(--color-ebony); /* Fondo oscuro para contrastar */
+		padding: 0.5rem 1rem;
+		margin: 0;
+		box-sizing: border-box;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
 	nav {
 		display: flex;
-		justify-content: center;
-		--background: rgba(255, 255, 255, 0.7);
-	}
-
-	svg {
-		width: 2em;
-		height: 3em;
-		display: block;
-	}
-
-	path {
-		fill: var(--background);
+		width: 100%;
+		justify-content: space-between;
+		--background: transparent; /* Anula el background anterior */
 	}
 
 	ul {
@@ -88,8 +60,8 @@
 		justify-content: center;
 		align-items: center;
 		list-style: none;
-		background: var(--background);
-		background-size: contain;
+		background: transparent; /* Fondo transparente para mostrar el color del header */
+		width: 100%;
 	}
 
 	li {
@@ -106,17 +78,45 @@
 		top: 0;
 		left: calc(50% - var(--size));
 		border: var(--size) solid transparent;
-		border-top: var(--size) solid var(--color-theme-1);
+		border-top: var(--size) solid var(--color-khaki); /* Cambiado del theme original */
+	}
+
+	.corner {
+		width: 3em;
+		height: 3em;
+		background-color: var(--color-cream);
+		border-radius: 50%;
+		border: 2px solid var(--color-khaki);
+		padding: 0.3rem;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		transition: transform 0.2s ease;
+	}
+
+	.corner:hover {
+		transform: scale(1.05);
+	}
+
+	.corner img {
+		width: 2.2em;
+		height: 2.2em;
+		object-fit: contain;
+		filter: brightness(0.9); /* Ajusta para mayor contraste si es necesario */
+	}
+
+	.corner img {
+		width: 2.2em; /* Aumentado para mayor visibilidad */
+		height: 2.2em;
+		object-fit: contain;
 	}
 
 	nav a {
 		display: flex;
 		height: 100%;
 		align-items: center;
-		padding: 0 0.5rem;
-		color: var(--color-text);
+		padding: 0 0.8rem;
+		color: var(--color-cream); /* Texto claro para contrastar con fondo oscuro */
 		font-weight: 700;
-		font-size: 0.8rem;
+		font-size: 0.9rem; /* Ligeramente más grande */
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		text-decoration: none;
@@ -124,6 +124,6 @@
 	}
 
 	a:hover {
-		color: var(--color-theme-1);
+		color: var(--color-khaki); /* Color de hover más cálido */
 	}
 </style>
