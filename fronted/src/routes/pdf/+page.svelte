@@ -3,7 +3,7 @@
   // IMPORTANTE: Importar los estilos CSS de PDFSlick
   import "@pdfslick/core/dist/pdf_viewer.css";
   import { onMount } from 'svelte';
-  import SimplePDFViewer from '$lib/components/SimplePDFViewer.svelte';
+  import ContextualPdfViewer from '$lib/components/ContextualPdfViewer.svelte';
   
   let pdfUrl: string | null = null;
   let file: File | null = null;
@@ -96,74 +96,61 @@
 </script>
 
 <div class="container">
-  <h1>Visor de PDF con consultas</h1>
-  
-  <div class="upload-section">
-    <input 
-      type="file" 
-      accept="application/pdf" 
-      on:change={handleFileUpload}
-      id="pdf-upload"
-      class="file-input"
-      disabled={isUploading}
-    />
-    <label for="pdf-upload" class="file-label">
-      {#if isUploading}
-        Procesando...
-      {:else}
-        Seleccionar PDF
-      {/if}
-    </label>
+  <header class="header">
+    <h1>Visor de PDF con Lápiz Inteligente</h1>
     
-    {#if file}
-      <span class="file-name">{file.name}</span>
-    {/if}
-  </div>
-  
-  {#if uploadError}
-    <div class="error-message">{uploadError}</div>
-  {/if}
-  
-  <!-- Contenedor principal para el visor de PDF y las preguntas -->
-  <div class="content-grid">
-    <!-- Contenedor del visor con altura fija -->
-    <div class="viewer-container">
-      <!-- Debug info -->
-      {#if pdfUrl}
-        <div class="debug-bar">
-          URL: {pdfUrl}
-        </div>
-      {/if}
-      
-      <!-- Solo renderizamos el componente si tenemos una URL -->
-      <SimplePDFViewer 
-        pdfUrl={pdfUrl} 
-        height={550} 
+    <div class="upload-section">
+      <input 
+        type="file" 
+        accept="application/pdf" 
+        on:change={handleFileUpload}
+        id="pdf-upload"
+        class="file-input"
+        disabled={isUploading}
       />
-    </div>
-    
-    <!-- Panel de preguntas -->
-    <div class="questions-panel">
-      <h2>Preguntas sobre el PDF</h2>
+      <label for="pdf-upload" class="file-label">
+        {#if isUploading}
+          Procesando...
+        {:else}
+          Seleccionar PDF
+        {/if}
+      </label>
       
-      {#if !pdfLoaded}
-        <p class="info-message">Carga un documento PDF para poder hacer preguntas sobre su contenido</p>
-      {:else}
-        <!-- Aquí irá el componente de preguntas cuando esté implementado -->
-        <div class="questions-form">
-          <textarea 
-            placeholder="Escribe tu pregunta sobre el documento..." 
-            class="question-input"
-          ></textarea>
-          <button class="submit-btn">Preguntar</button>
-        </div>
+      {#if file}
+        <span class="file-name">{file.name}</span>
+      {/if}
+      
+      {#if uploadError}
+        <div class="error-message">{uploadError}</div>
       {/if}
     </div>
-  </div>
+  </header>
+  
+  <!-- Contenedor principal para el visor de PDF a pantalla completa -->
+  <main class="pdf-container">
+    {#if pdfUrl}
+      <div class="debug-bar">
+        URL: {pdfUrl}
+      </div>
+    {/if}
+    
+    <!-- Reemplazamos SimplePDFViewer por ContextualPdfViewer -->
+    {#if pdfUrl}
+      <ContextualPdfViewer 
+        pdfUrl={pdfUrl} 
+        documentId={documentId}
+      />
+    {:else}
+      <div class="placeholder">
+        <p class="info-text">Selecciona un archivo PDF para comenzar</p>
+        <p class="feature-text">Usa el Lápiz Inteligente para interactuar con el contenido</p>
+      </div>
+    {/if}
+  </main>
 </div>
 
 <style>
-  /* Asegurarnos de que PDFSlick tenga el espacio correcto */
+  /* Estilos globales para PDFSlick */
   :global(.pdfSlickViewer) {
     margin: 0 !important;
   }
@@ -176,25 +163,27 @@
     bottom: 0;
   }
   
-  :global(.pdfSlickContainer .pdfViewer) {
-    position: relative;
+  .container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
   }
   
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+  .header {
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
   }
   
   h1 {
-    font-size: 28px;
-    margin-bottom: 20px;
-    color: #333;
-  }
-  
-  h2 {
-    font-size: 20px;
-    margin-bottom: 16px;
+    font-size: 1.4rem;
+    margin: 0;
     color: #333;
   }
   
@@ -202,7 +191,6 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 20px;
   }
   
   .file-input {
@@ -216,89 +204,60 @@
     border-radius: 4px;
     cursor: pointer;
     font-weight: 500;
+    font-size: 0.9rem;
   }
   
   .file-name {
-    font-size: 14px;
+    font-size: 0.9em;
     color: #555;
   }
   
   .error-message {
     background-color: #ffebee;
     color: #c62828;
-    padding: 10px 16px;
+    padding: 6px 12px;
     border-radius: 4px;
-    margin-bottom: 20px;
+    font-size: 0.9rem;
+  }
+  
+  .pdf-container {
+    flex: 1;
+    position: relative;
+    background-color: #f5f5f5;
+    overflow: hidden;
   }
   
   .debug-bar {
-    background-color: #f0f8ff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(240, 248, 255, 0.8);
     padding: 4px 8px;
     font-size: 12px;
     color: #0066cc;
-    border-bottom: 1px solid #ccc;
+    z-index: 10;
     word-break: break-all;
   }
   
-  .content-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .viewer-container {
-    position: relative;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    height: 600px; /* Altura fija para el contenedor */
-  }
-  
-  .questions-panel {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .info-message {
-    color: #666;
+  .placeholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
     text-align: center;
     padding: 20px;
   }
   
-  .questions-form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  .info-text {
+    font-size: 1.5rem;
+    color: #555;
+    margin-bottom: 10px;
   }
   
-  .question-input {
-    width: 100%;
-    height: 100px;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    resize: none;
-    font-family: inherit;
-  }
-  
-  .submit-btn {
-    padding: 8px 16px;
-    background-color: #0072e5;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    align-self: flex-end;
-  }
-  
-  @media (min-width: 1024px) {
-    .content-grid {
-      grid-template-columns: 2fr 1fr;
-    }
+  .feature-text {
+    font-size: 1.1rem;
+    color: #777;
   }
 </style>

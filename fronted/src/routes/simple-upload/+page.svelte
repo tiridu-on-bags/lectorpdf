@@ -1,4 +1,7 @@
 <script lang="ts">
+  import "@pdfslick/core/dist/pdf_viewer.css";
+  import SimplePDFViewer from '$lib/components/SimplePDFViewer.svelte';
+  
   let file: File | null = null;
   let isUploading = false;
   let uploadError = '';
@@ -24,8 +27,8 @@
       console.log('Enviando archivo al servidor (prueba simple)...');
       console.log('Archivo:', file.name, file.size, file.type);
       
-      // Endpoint simplificado
-      const response = await fetch('http://localhost:7860/api/upload-basic', {
+      // Endpoint correcto
+      const response = await fetch('http://localhost:8000/api/upload-basic', {
         method: 'POST',
         body: formData
       });
@@ -42,8 +45,20 @@
       console.log('Respuesta de carga:', data);
       
       // Actualizar la URL del PDF
-      pdfUrl = `http://localhost:7860${data.url}`;
+      pdfUrl = `http://localhost:8000${data.url}`;8000
       uploadSuccess = true;
+      
+      // Verificar si la URL es accesible
+      try {
+        const checkResponse = await fetch(pdfUrl, { method: 'HEAD' });
+        if (!checkResponse.ok) {
+          console.error('La URL del PDF no es accesible:', pdfUrl);
+        } else {
+          console.log('URL del PDF verificada y accesible');
+        }
+      } catch (error) {
+        console.error('Error verificando URL:', error);
+      }
       
     } catch (error) {
       console.error('Error capturado:', error);
@@ -86,8 +101,9 @@
       <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Ver PDF</a>
     </div>
     
-    <div class="pdf-viewer">
-      <iframe src={pdfUrl} width="100%" height="500px" title="PDF Viewer"></iframe>
+    <div class="pdf-container">
+      <!-- Usar el visor mejorado de PDFSlick en lugar del iframe simple -->
+      <SimplePDFViewer pdfUrl={pdfUrl} height={500} />
     </div>
   {/if}
 </div>
@@ -151,10 +167,17 @@
     text-decoration: none;
   }
   
-  .pdf-viewer {
+  .pdf-container {
+    position: relative;
     border: 1px solid #ddd;
     border-radius: 4px;
     overflow: hidden;
     margin-top: 20px;
+    height: 500px;
+  }
+  
+  /* Asegurar que el contenedor esté posicionado correctamente para PDFSlick */
+  :global(.pdf-container .pdfSlickContainer) {
+    position: absolute !important;
   }
 </style> 
