@@ -8,20 +8,24 @@ import fitz  # PyMuPDF
 from typing import List, Dict, Any
 import openai
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
-from langchain.llms import OpenAI
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.llms import OpenAI
+from langchain_community.document_loaders import PyPDFLoader
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Cargar variables de entorno
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Quitar el prefijo /api del router ya que app.py lo maneja
 router = APIRouter()
 
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 VECTOR_DIR = "vector_db"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(VECTOR_DIR, exist_ok=True)
@@ -29,67 +33,47 @@ os.makedirs(VECTOR_DIR, exist_ok=True)
 # Diccionario para mantener seguimiento de los vectorstores de cada PDF
 pdf_indexes = {}
 
-@router.post("/api/upload-pdf")
+@router.post("/upload-pdf")
 async def upload_pdf(file: UploadFile = File(...)):
+    logger.info(f"Recibiendo archivo: {file.filename}")
+    
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF")
     
-    # Generar un nombre único para el archivo
-    file_id = str(uuid.uuid4())
-    file_path = os.path.join(UPLOAD_DIR, f"{file_id}.pdf")
-    
-    # Guardar el archivo
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # Extraer información básica y texto
     try:
-        # Información básica con PyMuPDF (fitz)
+        # Generar un nombre único para el archivo
+        file_id = str(uuid.uuid4())
+        file_name = f"{file_id}.pdf"
+        file_path = os.path.join(UPLOAD_DIR, file_name)
+        
+        logger.info(f"Guardando archivo en: {file_path}")
+        
+        # Guardar el archivo
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Extraer información básica
         doc = fitz.open(file_path)
         info = {
             "pages": len(doc),
             "title": doc.metadata.get("title", "Sin título"),
             "author": doc.metadata.get("author", "Desconocido"),
         }
-        
-        # Extracción de texto completo
-        full_text = ""
-        for page_num in range(len(doc)):
-            page = doc.load_page(page_num)
-            full_text += page.get_text()
         doc.close()
         
-        # Crear chunks y embeddings para RAG
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200
-        )
-        chunks = text_splitter.split_text(full_text)
-        
-        # Crear vectorstore
-        embeddings = OpenAIEmbeddings()
-        vectorstore = FAISS.from_texts(chunks, embeddings)
-        
-        # Guardar referencia al vectorstore
-        pdf_indexes[file_id] = vectorstore
-        
-        # Guardar el vectorstore a disco (opcional)
-        vectorstore.save_local(os.path.join(VECTOR_DIR, file_id))
+        # Devolver la URL para acceder al PDF
+        return {
+            "url": f"/uploads/{file_name}",
+            "document_id": file_id,
+            "info": info,
+            "message": "PDF cargado exitosamente"
+        }
         
     except Exception as e:
+        logger.error(f"Error al procesar el PDF: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error al procesar el PDF: {str(e)}")
-    
-    # Devolver la URL para acceder al PDF y la información extraída
-    return {
-        "url": f"/api/pdf/{file_id}",
-        "document_id": file_id,
-        "info": info,
-        "text_length": len(full_text),
-        "chunks": len(chunks),
-        "message": "PDF cargado y procesado exitosamente"
-    }
 
-@router.get("/api/pdf/{file_id}")
+@router.get("/pdf/{file_id}")
 async def get_pdf(file_id: str):
     file_path = os.path.join(UPLOAD_DIR, f"{file_id}.pdf")
     
@@ -98,7 +82,7 @@ async def get_pdf(file_id: str):
     
     return FileResponse(file_path, media_type="application/pdf")
 
-@router.post("/api/ask/{document_id}")
+@router.post("/ask/{document_id}")
 async def ask_question(document_id: str, query: Dict[str, str]):
     if document_id not in pdf_indexes:
         # Intentar cargar desde disco si existe

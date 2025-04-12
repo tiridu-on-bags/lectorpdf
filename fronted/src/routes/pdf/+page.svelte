@@ -39,24 +39,32 @@
       console.log('Enviando archivo al servidor...');
       console.log('Archivo:', file.name, file.size, file.type);
       
-      const endpoint = 'http://localhost:8000/api/upload-basic';
+      const endpoint = '/api/upload-pdf';
       console.log('Usando endpoint:', endpoint);
       
       const response = await fetch(endpoint, {
         method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
         body: formData
       });
       
       if (!response.ok) {
-        throw new Error(`Error al subir el archivo: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Error al subir el archivo: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
       console.log('Respuesta del servidor:', data);
       
-      // CAMBIO IMPORTANTE: Esperar un momento antes de asignar la URL
-      // Esto permite que el componente se actualice correctamente
+      // CAMBIO IMPORTANTE: Construir la URL completa del PDF
       setTimeout(() => {
+        if (!data.url) {
+          throw new Error('URL no recibida del servidor');
+        }
+        // Usar la URL completa del servidor
         pdfUrl = `http://localhost:8000${data.url}`;
         documentId = data.document_id || '';
         pdfLoaded = true;
