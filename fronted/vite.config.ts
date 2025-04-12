@@ -5,13 +5,12 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [sveltekit()],
   
-  // Configuración del proxy para API de Gradio
+  // Configuración del proxy para backend FastAPI
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:7860',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        target: 'http://localhost:8000',
+        changeOrigin: true
       }
     }
   },
@@ -19,5 +18,11 @@ export default defineConfig({
   // Resolución de módulos optimizada
   resolve: {
     dedupe: ['svelte']
+  },
+
+  // Configuración de optimización de dependencias
+  optimizeDeps: {
+    include: ['@sveltejs/kit', 'svelte'],
+    force: true
   }
 });
