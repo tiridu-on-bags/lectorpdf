@@ -4,8 +4,8 @@
 ```
 lectorpdf/
 ├── backend/
-│   ├── app.py              # Aplicación principal FastAPI
-│   ├── pdf_routes.py       # Rutas para manejo de PDFs
+│   ├── app.py              # Aplicación principal FastAPI (ÚNICO punto de entrada)
+│   ├── pdf_routes.py       # Rutas específicas para PDFs
 │   ├── uploads/            # Directorio para archivos PDF
 │   ├── vector_db/          # Base de datos vectorial
 │   └── .env                # Variables de entorno
@@ -35,6 +35,7 @@ lectorpdf/
    ```bash
    cd backend
    source venv/bin/activate
+   # IMPORTANTE: Usar app.py como punto de entrada
    uvicorn app:app --reload --port 8000 --host 0.0.0.0
    ```
 
@@ -43,6 +44,11 @@ lectorpdf/
    cd fronted
    npm run dev
    ```
+
+## Notas Importantes
+- **Siempre usar `app.py` como punto de entrada del backend**
+- No usar `api.py` ya que está obsoleto
+- El archivo `app.py` contiene toda la configuración necesaria y usa routers para modularizar el código
 
 ## Mantenimiento
 
@@ -54,7 +60,7 @@ lectorpdf/
 ### Resolución de Problemas Comunes
 
 1. **Error 404 en subida de PDFs**:
-   - Verificar que el backend está corriendo
+   - Verificar que el backend está corriendo usando `app.py`
    - Comprobar la URL en `fronted/.env`
    - Asegurar que el directorio `uploads` tiene permisos correctos
 
@@ -69,6 +75,7 @@ lectorpdf/
 ## Mejores Prácticas
 
 1. **Backend**:
+   - Usar siempre `app.py` como punto de entrada
    - Mantener el entorno virtual activado
    - Usar logging para debugging
    - Verificar rutas y permisos regularmente

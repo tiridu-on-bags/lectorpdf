@@ -47,4 +47,5 @@ npm install
 
 echo "Configuración completada. Para iniciar el proyecto:"
 echo "1. Backend: cd backend && source venv/bin/activate && uvicorn app:app --reload --port 8000 --host 0.0.0.0"
+echo "   NOTA: Siempre usar app.py como punto de entrada del backend"
 echo "2. Frontend: cd fronted && npm run dev" 
