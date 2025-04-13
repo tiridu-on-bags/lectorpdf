@@ -29,52 +29,53 @@
     file = selectedFile;
     isUploading = true;
     uploadError = '';
-    pdfUrl = null; // Reset URL to force reload
+    pdfUrl = null;
     
     try {
-      // Crear FormData para enviar el archivo
       const formData = new FormData();
       formData.append('file', file);
       
-      console.log('Enviando archivo al servidor...');
-      console.log('Archivo:', file.name, file.size, file.type);
+      console.log('Iniciando subida de archivo...');
+      console.log('Detalles del archivo:', {
+        nombre: file.name,
+        tamaño: file.size,
+        tipo: file.type
+      });
       
-      const endpoint = '/api/upload-pdf';
-      console.log('Usando endpoint:', endpoint);
+      // Usar la URL directa del backend
+      const endpoint = 'http://localhost:8000/api/upload-pdf';
+      console.log('Endpoint de subida:', endpoint);
       
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-        },
         body: formData
       });
       
+      console.log('Estado de la respuesta:', response.status);
+      console.log('Headers de la respuesta:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Error al subir el archivo: ${response.status} - ${errorText}`);
+        const errorData = await response.json().catch(() => ({ detail: 'Error desconocido' }));
+        console.error('Error detallado:', errorData);
+        throw new Error(`Error al subir el archivo: ${response.status} - ${errorData.detail}`);
       }
       
       const data = await response.json();
-      console.log('Respuesta del servidor:', data);
+      console.log('Respuesta completa del servidor:', data);
       
-      // CAMBIO IMPORTANTE: Construir la URL completa del PDF
-      setTimeout(() => {
-        if (!data.url) {
-          throw new Error('URL no recibida del servidor');
-        }
-        // Usar la URL completa del servidor
-        pdfUrl = `http://localhost:8000${data.url}`;
-        documentId = data.document_id || '';
-        pdfLoaded = true;
-        isUploading = false;
-        console.log('PDF URL asignada:', pdfUrl);
-      }, 100);
+      if (!data.url) {
+        throw new Error('No se recibió URL del archivo en la respuesta');
+      }
+      
+      pdfUrl = `http://localhost:8000${data.url}`;
+      documentId = data.document_id || '';
+      pdfLoaded = true;
+      isUploading = false;
+      console.log('PDF cargado exitosamente:', pdfUrl);
       
     } catch (error) {
-      console.error('Error capturado:', error);
-      uploadError = error.message || 'Error desconocido al subir el archivo';
+      console.error('Error en la subida:', error);
+      uploadError = error instanceof Error ? error.message : 'Error desconocido al subir el archivo';
       isUploading = false;
       file = null;
     }
