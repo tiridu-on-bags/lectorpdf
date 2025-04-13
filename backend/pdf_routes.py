@@ -33,7 +33,7 @@ os.makedirs(VECTOR_DIR, exist_ok=True)
 # Diccionario para mantener seguimiento de los vectorstores de cada PDF
 pdf_indexes = {}
 
-@router.post("/upload-pdf")
+@router.post("/upload-pdf", response_model=dict)
 async def upload_pdf(file: UploadFile = File(...)):
     logger.info(f"Recibiendo archivo: {file.filename}")
     
@@ -52,26 +52,17 @@ async def upload_pdf(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # Extraer información básica
-        doc = fitz.open(file_path)
-        info = {
-            "pages": len(doc),
-            "title": doc.metadata.get("title", "Sin título"),
-            "author": doc.metadata.get("author", "Desconocido"),
-        }
-        doc.close()
+        logger.info(f"Archivo guardado exitosamente: {file_path}")
         
-        # Devolver la URL para acceder al PDF
+        # Retornar la URL del archivo
         return {
             "url": f"/uploads/{file_name}",
             "document_id": file_id,
-            "info": info,
-            "message": "PDF cargado exitosamente"
+            "status": "success"
         }
-        
     except Exception as e:
-        logger.error(f"Error al procesar el PDF: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error al procesar el PDF: {str(e)}")
+        logger.error(f"Error al procesar el archivo: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al procesar el archivo: {str(e)}")
 
 @router.get("/pdf/{file_id}")
 async def get_pdf(file_id: str):

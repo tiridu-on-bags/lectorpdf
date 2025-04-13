@@ -31,13 +31,22 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # Registrar las rutas de PDF con el prefijo /api
-app.include_router(pdf_router, prefix="/api")
+app.include_router(pdf_router, prefix="/api", tags=["pdf"])
 
 @app.get("/")
 async def root():
     """Root endpoint para verificar que el servidor está funcionando"""
     logger.info("Root endpoint called")
-    return {"status": "ok", "message": "Server is running"}
+    return {
+        "status": "ok",
+        "message": "Bienvenido a la API de Procesamiento de PDF",
+        "endpoints": {
+            "upload": "/api/upload-pdf",
+            "health": "/api/health",
+            "get_pdf": "/api/pdf/{file_id}",
+            "ask": "/api/ask/{document_id}"
+        }
+    }
 
 @app.get("/api/health")
 async def health_check():
