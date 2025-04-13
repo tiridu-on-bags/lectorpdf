@@ -1,24 +1,22 @@
 <script lang="ts">
-	import { page } from '$app/state';
+	import { page } from '$app/stores'; // Corregido de $app/state a $app/stores
 	import { onMount } from 'svelte';
-	import logo from '$lib/images/pdfindex.svg';
-	import pdfindex from '$lib/images/pdfindex.jpg';
+	// La importación del logo no es necesaria si lo sirves desde /static
 </script>
 
 <header class="header-container">
 	<nav>
+		<div class="logo-container">
+			<a href="/">
+				<!-- Actualizado para usar el SVG desde /static -->
+				<img src="/pdfindex.svg" alt="PDF INDEX" class="logo" />
+			</a>
+		</div>
 		<ul>
-			<li aria-current={page.url.pathname === '/' ? 'page' : undefined}>
-				<div class="fill corner">
-					<a href="/">
-						<img src={logo} alt="PDF Index" class="" />
-					</a>
-				</div>
-			</li>
-			<li aria-current={page.url.pathname.startsWith('/pdf') ? 'page' : undefined}>
+			<li aria-current={$page.url.pathname.startsWith('/pdf') ? 'page' : undefined}>
 				<a href="/pdf">PDF</a>
 			</li>
-			<li aria-current={page.url.pathname.startsWith('/simple-upload') ? 'page' : undefined}>
+			<li aria-current={$page.url.pathname.startsWith('/simple-upload') ? 'page' : undefined}>
 				<a href="/simple-upload">Subida Simple</a>
 			</li>
 		</ul>
@@ -26,7 +24,7 @@
 </header>
 
 <style>
-	/* Definir variables con la paleta de colores */
+	/* Variables de colores mantenidas */
 	:root {
 		--color-ebony: #2c332d;
 		--color-sage: #747c71;
@@ -37,10 +35,8 @@
 	.header-container {
 		display: flex;
 		width: 100%;
-		background-color: var(--color-ebony); /* Fondo oscuro para contrastar */
+		background-color: var(--color-ebony);
 		padding: 0.5rem 1rem;
-		margin: 0;
-		box-sizing: border-box;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
@@ -48,20 +44,32 @@
 		display: flex;
 		width: 100%;
 		justify-content: space-between;
-		--background: transparent; /* Anula el background anterior */
+		align-items: center; /* Alineación vertical centrada */
 	}
 
-	ul {
-		position: relative;
-		padding: 0;
-		margin: 0;
-		height: 3em;
+	/* Optimizado para SVG */
+	.logo-container {
+		background-color: rgba(231, 223, 206, 0.1);
+		height: 100px; /* Altura fija en pixels para precisión */
+		padding-right: 0.1rem; /* Espacio de separación con la navegación */
 		display: flex;
-		justify-content: center;
+		align-items: center;
+		border-radius: 15px;
+	}
+	.logo {
+		height: 100%; /* SVG se ajusta a la altura del contenedor */
+		width: auto; /* Mantiene proporción automáticamente */
+		max-width: 180px; /* Limita el ancho máximo */
+		filter: contrast(1.2) brightness(0.9) drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
+	}
+	
+	ul {
+		display: flex;
 		align-items: center;
 		list-style: none;
-		background: transparent; /* Fondo transparente para mostrar el color del header */
-		width: 100%;
+		margin: 0;
+		padding: 0;
+		height: 3em;
 	}
 
 	li {
@@ -78,35 +86,7 @@
 		top: 0;
 		left: calc(50% - var(--size));
 		border: var(--size) solid transparent;
-		border-top: var(--size) solid var(--color-khaki); /* Cambiado del theme original */
-	}
-
-	.corner {
-		width: 3em;
-		height: 3em;
-		background-color: var(--color-cream);
-		border-radius: 50%;
-		border: 2px solid var(--color-khaki);
-		padding: 0.3rem;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-		transition: transform 0.2s ease;
-	}
-
-	.corner:hover {
-		transform: scale(1.05);
-	}
-
-	.corner img {
-		width: 2.2em;
-		height: 2.2em;
-		object-fit: contain;
-		filter: brightness(0.9); /* Ajusta para mayor contraste si es necesario */
-	}
-
-	.corner img {
-		width: 2.2em; /* Aumentado para mayor visibilidad */
-		height: 2.2em;
-		object-fit: contain;
+		border-top: var(--size) solid var(--color-khaki);
 	}
 
 	nav a {
@@ -114,9 +94,9 @@
 		height: 100%;
 		align-items: center;
 		padding: 0 0.8rem;
-		color: var(--color-cream); /* Texto claro para contrastar con fondo oscuro */
+		color: var(--color-cream);
 		font-weight: 700;
-		font-size: 0.9rem; /* Ligeramente más grande */
+		font-size: 0.9rem;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		text-decoration: none;
@@ -124,6 +104,6 @@
 	}
 
 	a:hover {
-		color: var(--color-khaki); /* Color de hover más cálido */
+		color: var(--color-khaki);
 	}
 </style>
