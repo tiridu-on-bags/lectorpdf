@@ -15,6 +15,18 @@ from langchain_community.llms import OpenAI
 from langchain_community.document_loaders import PyPDFLoader
 from dotenv import load_dotenv
 import logging
+from pydantic import BaseModel
+
+# Modelo para solicitudes de texto seleccionado
+class SelectedTextRequest(BaseModel):
+    text: str
+    document_id: str = ""
+
+# Modelo para preguntas sobre texto seleccionado
+class QuestionRequest(BaseModel):
+    text: str
+    question: str
+    document_id: str = ""
 
 logger = logging.getLogger(__name__)
 
@@ -122,3 +134,87 @@ async def ask_question(document_id: str, query: Dict[str, str]):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al procesar la pregunta: {str(e)}")
+
+# Nuevos endpoints para el Lápiz Inteligente Contextual
+
+@router.post("/summarize")
+async def summarize_text(request: SelectedTextRequest):
+    """Genera un resumen del texto seleccionado por el usuario."""
+    try:
+        logger.info(f"Solicitando resumen de texto de {len(request.text)} caracteres")
+        
+        # LLM para resumir
+        llm = OpenAI(temperature=0.3)
+        prompt = f"""
+        Resume el siguiente texto de forma concisa, manteniendo las ideas clave:
+        
+        {request.text}
+        
+        Resumen:
+        """
+        
+        summary = llm.predict(prompt)
+        
+        return {
+            "summary": summary,
+            "status": "success"
+        }
+    except Exception as e:
+        logger.error(f"Error al resumir texto: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al resumir texto: {str(e)}")
+
+@router.post("/explain")
+async def explain_text(request: SelectedTextRequest):
+    """Proporciona una explicación del texto seleccionado."""
+    try:
+        logger.info(f"Solicitando explicación de texto de {len(request.text)} caracteres")
+        
+        # LLM para explicación
+        llm = OpenAI(temperature=0.3)
+        prompt = f"""
+        Explica el siguiente texto o concepto de manera clara y sencilla:
+        
+        {request.text}
+        
+        Explicación:
+        """
+        
+        explanation = llm.predict(prompt)
+        
+        return {
+            "explanation": explanation,
+            "status": "success"
+        }
+    except Exception as e:
+        logger.error(f"Error al explicar texto: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al explicar texto: {str(e)}")
+
+@router.post("/ask-selected")
+async def ask_about_selected(request: QuestionRequest):
+    """Responde preguntas específicas sobre el texto seleccionado."""
+    try:
+        logger.info(f"Respondiendo pregunta sobre texto seleccionado")
+        
+        # LLM para responder preguntas sobre texto seleccionado
+        llm = OpenAI(temperature=0.3)
+        prompt = f"""
+        Basándote únicamente en el siguiente texto, responde a la pregunta del usuario.
+        Si la respuesta no se encuentra en el texto, di "No puedo responder a esta pregunta basándome solo en el texto seleccionado."
+        
+        Texto seleccionado:
+        {request.text}
+        
+        Pregunta: {request.question}
+        
+        Respuesta:
+        """
+        
+        answer = llm.predict(prompt)
+        
+        return {
+            "answer": answer,
+            "status": "success"
+        }
+    except Exception as e:
+        logger.error(f"Error al responder pregunta: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al responder pregunta: {str(e)}")
