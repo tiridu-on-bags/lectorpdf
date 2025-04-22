@@ -1,59 +1,41 @@
 <script lang="ts">
-	import "@pdfslick/core/dist/pdf_viewer.css";
-	import Header from './Header.svelte';
+	import '@pdfslick/core/dist/pdf_viewer.css';
 	import '../app.css';
-
-	let { children } = $props();
 </script>
 
-<div class="app">
-	<Header />
+<div class="bg-background text-primary-text min-h-screen font-sans">
+	<header class="sticky top-0 z-10 bg-white shadow-md">
+		<nav class="container mx-auto flex items-center px-4 py-4">
+			<a href="/" class="flex items-center">
+				<!-- Imagen del logo -->
+				<img 
+					src="/pdfindex_v4.jpeg" 
+					alt="LectorPDF Logo" 
+					class="h-14 mr-3"
+				/>
+			</a>
+			<!-- Navegación principal -->
+			<div class="ml-auto flex items-center">
+				<a href="/" class="text-secondary-text hover:text-accent transition-colors mr-6">Inicio</a>
+				<a href="/pdf" class="text-secondary-text hover:text-accent transition-colors mr-6">Cargar PDF</a>
+				<a href="/auth" class="bg-accent hover:bg-accent-hover text-white py-2 px-4 rounded-md shadow-sm transition-colors">
+					Iniciar Sesión
+				</a>
+			</div>
+		</nav>
+	</header>
 
 	<main>
-		{@render children()}
+		<slot />
 	</main>
 
-	<footer>
-		<p>
-			visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to learn about SvelteKit
-		</p>
+	<footer class="bg-white py-8 border-t border-structure-alt/20">
+		<div class="container mx-auto px-4 text-center text-secondary-text">
+			<p>© {new Date().getFullYear()} LectorPDF - La forma inteligente de leer documentos</p>
+		</div>
 	</footer>
 </div>
 
 <style>
-	.app {
-		display: flex;
-		flex-direction: column;
-		min-height: 100vh;
-		width: 100%;
-	}
-
-	main {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		padding: 1rem;
-		width: 100%;
-		max-width: 64rem;
-		margin: 0 auto;
-		box-sizing: border-box;
-	}
-
-	footer {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		padding: 12px;
-	}
-
-	footer a {
-		font-weight: bold;
-	}
-
-	@media (min-width: 480px) {
-		footer {
-			padding: 12px 0;
-		}
-	}
+	/* Estilos globales específicos aquí si es necesario */
 </style>
