@@ -1,95 +1,75 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import logo from '$lib/images/svelte-logo.svg';
-	import github from '$lib/images/github.svg';
+	import { page } from '$app/stores'; // Corregido de $app/state a $app/stores
+	import { onMount } from 'svelte';
+	// La importación del logo no es necesaria si lo sirves desde /static
 </script>
 
-<header>
-	<div class="corner">
-		<a href="https://svelte.dev/docs/kit">
-			<img src={logo} alt="SvelteKit" />
-		</a>
-	</div>
-
+<header class="header-container">
 	<nav>
-		<svg viewBox="0 0 2 3" aria-hidden="true">
-			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
-		</svg>
+		<div class="logo-container">
+			<a href="/">
+				<!-- Actualizado para usar el SVG desde /static -->
+				<img src="/pdfindex.svg" alt="PDF INDEX" class="logo" />
+			</a>
+		</div>
 		<ul>
-			<li aria-current={page.url.pathname === '/' ? 'page' : undefined}>
-				<a href="/">Home</a>
+			<li aria-current={$page.url.pathname.startsWith('/pdf') ? 'page' : undefined}>
+				<a href="/pdf">PDF</a>
 			</li>
-			<li aria-current={page.url.pathname.startsWith('/pdf') ? 'page' : undefined}>
-				<a href="/pdf">Pdf</a>
-			</li>
-			<li aria-current={page.url.pathname.startsWith('/simple-upload') ? 'page' : undefined}>
+			<li aria-current={$page.url.pathname.startsWith('/simple-upload') ? 'page' : undefined}>
 				<a href="/simple-upload">Subida Simple</a>
 			</li>
 		</ul>
-		<svg viewBox="0 0 2 3" aria-hidden="true">
-			<path d="M0,0 L0,3 C0.5,3 0.5,3 1,2 L2,0 Z" />
-		</svg>
 	</nav>
-
-	<div class="corner">
-		<a href="https://github.com/sveltejs/kit">
-			<img src={github} alt="GitHub" />
-		</a>
-	</div>
 </header>
 
 <style>
-	header {
-		display: flex;
-		justify-content: space-between;
+	/* Variables de colores mantenidas */
+	:root {
+		--color-ebony: #2c332d;
+		--color-sage: #747c71;
+		--color-cream: #f9f4e9;
+		--color-khaki: #6d5542;
 	}
 
-	.corner {
-		width: 3em;
-		height: 3em;
-	}
-
-	.corner a {
+	.header-container {
 		display: flex;
-		align-items: center;
-		justify-content: center;
 		width: 100%;
-		height: 100%;
-	}
-
-	.corner img {
-		width: 2em;
-		height: 2em;
-		object-fit: contain;
+		background-color: var(--color-ebony);
+		padding: 0.5rem 1rem;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
 	nav {
 		display: flex;
-		justify-content: center;
-		--background: rgba(255, 255, 255, 0.7);
+		width: 100%;
+		justify-content: space-between;
+		align-items: center; /* Alineación vertical centrada */
 	}
 
-	svg {
-		width: 2em;
-		height: 3em;
-		display: block;
-	}
-
-	path {
-		fill: var(--background);
-	}
-
-	ul {
-		position: relative;
-		padding: 0;
-		margin: 0;
-		height: 3em;
+	/* Optimizado para SVG */
+	.logo-container {
+		background-color: rgba(231, 223, 206, 0.1);
+		height: 100px; /* Altura fija en pixels para precisión */
+		padding-right: 0.1rem; /* Espacio de separación con la navegación */
 		display: flex;
-		justify-content: center;
+		align-items: center;
+		border-radius: 15px;
+	}
+	.logo {
+		height: 100%; /* SVG se ajusta a la altura del contenedor */
+		width: auto; /* Mantiene proporción automáticamente */
+		max-width: 180px; /* Limita el ancho máximo */
+		filter: contrast(1.2) brightness(0.9) drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
+	}
+	
+	ul {
+		display: flex;
 		align-items: center;
 		list-style: none;
-		background: var(--background);
-		background-size: contain;
+		margin: 0;
+		padding: 0;
+		height: 3em;
 	}
 
 	li {
@@ -106,17 +86,17 @@
 		top: 0;
 		left: calc(50% - var(--size));
 		border: var(--size) solid transparent;
-		border-top: var(--size) solid var(--color-theme-1);
+		border-top: var(--size) solid var(--color-khaki);
 	}
 
 	nav a {
 		display: flex;
 		height: 100%;
 		align-items: center;
-		padding: 0 0.5rem;
-		color: var(--color-text);
+		padding: 0 0.8rem;
+		color: var(--color-cream);
 		font-weight: 700;
-		font-size: 0.8rem;
+		font-size: 0.9rem;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		text-decoration: none;
@@ -124,6 +104,6 @@
 	}
 
 	a:hover {
-		color: var(--color-theme-1);
+		color: var(--color-khaki);
 	}
 </style>
