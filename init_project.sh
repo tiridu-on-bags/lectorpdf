@@ -36,7 +36,18 @@ fi
 # Verificar dependencias del backend
 echo "Verificando dependencias del backend..."
 cd backend
-python -m venv venv
+
+# Detectar Python 3 o Python
+if command -v python3 &>/dev/null; then
+    PYTHON=python3
+elif command -v python &>/dev/null; then
+    PYTHON=python
+else
+    echo "Python no está instalado. Por favor instálalo e intenta de nuevo."
+    exit 1
+fi
+
+$PYTHON -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
@@ -48,4 +59,7 @@ npm install
 echo "Configuración completada. Para iniciar el proyecto:"
 echo "1. Backend: cd backend && source venv/bin/activate && uvicorn app:app --reload --port 8000 --host 0.0.0.0"
 echo "   NOTA: Siempre usar app.py como punto de entrada del backend"
-echo "2. Frontend: cd fronted && npm run dev" 
+echo "2. Frontend: cd fronted && npm run dev"
+
+cd backend
+uvicorn app:app --reload --port 8000 --host 0.0.0.0 
