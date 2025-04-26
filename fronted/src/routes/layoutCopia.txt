@@ -1,11 +1,29 @@
 <script lang="ts">
 	import '@pdfslick/core/dist/pdf_viewer.css';
 	import '../app.css';
-	import Header from './Header.svelte';
 </script>
 
 <div class="min-h-screen font-sans">
-	<Header />
+	<header class="sticky top-0 z-10 bg-header shadow-sm">
+		<nav class="container mx-auto flex items-center px-4 py-3">
+			<a href="/" class="flex items-center">
+				<!-- Imagen del logo con tamaño aumentado -->
+				<img 
+					src="/pdfindex_v4.jpeg" 
+					alt="PDFIndex Logo" 
+					class="h-16 mr-3"
+				/>
+			</a>
+			<!-- Navegación principal -->
+			<div class="ml-auto flex items-center">
+				<!--<a href="/" class="text-primary hover:text-accent transition-colors mr-6">Inicio</a>--->
+				<a href="/pdf" class="text-primary hover:text-accent transition-colors mr-6">Cargar PDF</a>
+				<a href="/auth" class="bg-accent hover:bg-accent-hover text-white py-2 px-4 rounded-md shadow-sm transition-colors">
+					Iniciar Sesión
+				</a>
+			</div>
+		</nav>
+	</header>
 
 	<main>
 		<slot />

@@ -6,6 +6,7 @@
 
 	let pdfUrl: string | null = null;
 	let file: File | null = null;
+	let fileInput: HTMLInputElement;
 	let isUploading = false;
 	let uploadError = '';
 	let documentId = '';
@@ -19,6 +20,11 @@
 	// Función para navegar a la página de carga de PDF
 	function navigateToPDFUpload() {
 		window.location.href = '/pdf';
+	}
+
+	// Function to programmatically open the file picker
+	function openFileDialog() {
+		fileInput?.click();
 	}
 
 	async function handleFileUpload(event: Event) {
@@ -126,7 +132,9 @@
 			</p>
 
 			<div class="hero-buttons">
-				<button class="btn-upload" on:click={navigateToPDFUpload}>Sube un PDF ahora</button>
+				<button class="btn-upload" on:click={openFileDialog} disabled={isUploading}>
+					{isUploading ? 'Procesando...' : 'Sube un PDF ahora'}
+				</button>
 				<a href="#features" class="btn-demo">
 					<span class="icon-play">▶</span>
 					Ver Demo Rápida
@@ -208,14 +216,12 @@
 			<!-- Sección de carga solo visible si no hay PDF cargado -->
 			{#if !pdfLoaded}
 				<div class="bg-background flex flex-grow flex-col items-center justify-center p-8">
-					<h1 class="text-primary-text mb-2 text-center text-3xl font-bold">
-						PDFIndex: Tu Lector Inteligente de PDF
-					</h1>
-					<p class="text-secondary-text mb-6 max-w-xl text-center text-lg">
-						Sube un PDF para extraer ideas, resumir contenido y obtener respuestas al instante con
-						IA.
-					</p>
-
+					<div class="flex flex-col items-center justify-center pb-12">
+						<h1 class="text-primary-text mb-2 text-center text-3xl font-bold">
+							PDFIndex: Tu Lector Inteligente de PDF
+						</h1>
+					</div>
+					<!-- Button to open file dialog -->
 					<div class="w-full max-w-md">
 						<label
 							for="pdf-upload"
@@ -243,6 +249,7 @@
 								type="file"
 								class="hidden"
 								accept="application/pdf"
+								bind:this={fileInput}
 								on:change={handleFileUpload}
 								disabled={isUploading}
 							/>
