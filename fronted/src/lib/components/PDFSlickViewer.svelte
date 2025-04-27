@@ -54,7 +54,16 @@
     }
   </script>
   
-  <div class="pdfslick-container" bind:this={container}></div>
+  {#if pdfUrl}
+    <iframe
+      title="Visor de PDF"
+      src={`/pdfjs/web/viewer.html?file=${encodeURIComponent(pdfUrl)}`}
+      class="w-full h-full border-0"
+      allowfullscreen
+    ></iframe>
+  {:else}
+    <div class="pdfslick-container" bind:this={container}></div>
+  {/if}
   
   <style>
     .pdfslick-container {

@@ -46,6 +46,8 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"@pdfslick/core": "^2.3.0"
+		"@pdfslick/core": "^2.3.0",
+		"pdfjs-dist": "^5.1.91",
+		"pspdfkit": "^2024.8.2"
 	}
 }

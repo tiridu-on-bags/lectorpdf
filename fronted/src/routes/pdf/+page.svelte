@@ -1,18 +1,15 @@
 <!-- src/routes/pdf/+page.svelte -->
 <script lang="ts">
-  // IMPORTANTE: Importar los estilos CSS de PDFSlick
-  import "@pdfslick/core/dist/pdf_viewer.css";
-  // Solo usamos un iframe para renderizar el PDF
+  // Importamos el componente y el store
+  import PdfJsViewer from '$lib/components/PdfJsViewer.svelte';
+  import { pdfStore } from '$lib/stores/pdf-state';
   
-  let pdfUrl: string | null = null;
   let file: File | null = null;
   let isUploading = false;
   let uploadError = '';
   
-  // Registrar cambios en pdfUrl para depuración
-  $: if (pdfUrl) {
-    console.log('pdfUrl actualizada:', pdfUrl);
-  }
+  // Usar el store para obtener la URL
+  $: pdfUrl = $pdfStore.url;
   
   async function handleFileUpload(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -26,7 +23,9 @@
     file = selectedFile;
     isUploading = true;
     uploadError = '';
-    pdfUrl = null;
+    
+    // Resetear el store al empezar una nueva carga
+    pdfStore.reset();
     
     try {
       const formData = new FormData();
@@ -64,8 +63,17 @@
         throw new Error('No se recibió URL del archivo en la respuesta');
       }
       
-      pdfUrl = `http://localhost:8000${data.url}`;
-      console.log('PDF cargado exitosamente:', pdfUrl);
+      // Cargar el PDF en el store y notificar éxito
+      const fullUrl = `http://localhost:8000${data.url}`;
+      console.log('PDF cargado exitosamente:', fullUrl);
+      isUploading = false;
+      
+      // Verificar URL y cargar PDF
+      if (await checkUrl(fullUrl)) {
+        pdfStore.loadPdf(fullUrl);
+      } else {
+        throw new Error('La URL del PDF no es accesible');
+      }
       
     } catch (error) {
       console.error('Error en la subida:', error);
@@ -79,22 +87,12 @@
   async function checkUrl(url: string): Promise<boolean> {
     try {
       const response = await fetch(url, { method: 'HEAD' });
+      console.log('URL del PDF verificada:', response.ok);
       return response.ok;
     } catch (error) {
       console.error('Error verificando URL:', error);
       return false;
     }
-  }
-  
-  // Verificar la URL del PDF cuando cambie
-  $: if (pdfUrl) {
-    checkUrl(pdfUrl).then(isValid => {
-      if (!isValid) {
-        console.error('La URL del PDF no es accesible:', pdfUrl);
-      } else {
-        console.log('URL del PDF verificada y accesible');
-      }
-    });
   }
 </script>
 
@@ -135,16 +133,9 @@
       <div class="debug-bar">
         URL: {pdfUrl}
       </div>
-    {/if}
-    
-    <!-- Reemplazamos el visor embebido con un iframe directo -->
-    {#if pdfUrl}
-      <div class="pdf-container relative w-full h-full">
-        <iframe
-          src={`/pdfjs/web/viewer.html?file=${encodeURIComponent(pdfUrl)}`}
-          class="w-full h-full border-0"
-          allowfullscreen
-        ></iframe>
+      
+      <div class="w-full h-full">
+        <PdfJsViewer {pdfUrl} />
       </div>
     {:else}
       <div class="placeholder">
@@ -156,19 +147,6 @@
 </div>
 
 <style>
-  /* Estilos globales para PDFSlick */
-  :global(.pdfSlickViewer) {
-    margin: 0 !important;
-  }
-  
-  :global(.pdfSlickContainer) {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-  }
-  
   .container {
     display: flex;
     flex-direction: column;
