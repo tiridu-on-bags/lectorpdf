@@ -96,20 +96,20 @@
   }
 </script>
 
-<div class="container">
-  <header class="header">
-    <h1>Visor de PDF con Lápiz Inteligente</h1>
+<div class="flex flex-col h-full w-full overflow-hidden">
+  <header class="p-2.5 bg-gray-100 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+    <h1 class="text-xl text-gray-800 m-0">Visor de PDF con Lápiz Inteligente</h1>
     
-    <div class="upload-section">
+    <div class="flex items-center gap-2.5">
       <input 
         type="file" 
         accept="application/pdf" 
         on:change={handleFileUpload}
         id="pdf-upload"
-        class="file-input"
+        class="hidden"
         disabled={isUploading}
       />
-      <label for="pdf-upload" class="file-label">
+      <label for="pdf-upload" class="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer font-medium text-sm">
         {#if isUploading}
           Procesando...
         {:else}
@@ -118,19 +118,19 @@
       </label>
       
       {#if file}
-        <span class="file-name">{file.name}</span>
+        <span class="text-sm text-gray-700">{file.name}</span>
       {/if}
       
       {#if uploadError}
-        <div class="error-message">{uploadError}</div>
+        <div class="bg-red-50 text-red-700 px-3 py-1.5 rounded text-sm">{uploadError}</div>
       {/if}
     </div>
   </header>
   
   <!-- Contenedor principal para el visor de PDF a pantalla completa -->
-  <main class="pdf-container">
+  <main class="flex-1 relative bg-gray-100 overflow-hidden">
     {#if pdfUrl}
-      <div class="debug-bar">
+      <div class="absolute inset-x-0 top-0 bg-white bg-opacity-80 p-1 text-xs text-blue-600 z-10 break-all">
         URL: {pdfUrl}
       </div>
       
@@ -138,110 +138,10 @@
         <PdfJsViewer {pdfUrl} />
       </div>
     {:else}
-      <div class="placeholder">
-        <p class="info-text">Selecciona un archivo PDF para comenzar</p>
-        <p class="feature-text">Usa el Lápiz Inteligente para interactuar con el contenido</p>
+      <div class="flex flex-col justify-center items-center h-full text-center p-5">
+        <p class="text-2xl text-gray-700 mb-2.5">Selecciona un archivo PDF para comenzar</p>
+        <p class="text-lg text-gray-500">Usa el Lápiz Inteligente para interactuar con el contenido</p>
       </div>
     {/if}
   </main>
 </div>
-
-<style>
-  .container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    width: 100%;
-    overflow: hidden;
-  }
-  
-  .header {
-    padding: 10px 20px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  
-  h1 {
-    font-size: 1.4rem;
-    margin: 0;
-    color: #333;
-  }
-  
-  .upload-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .file-input {
-    display: none;
-  }
-  
-  .file-label {
-    padding: 8px 16px;
-    background-color: #0072e5;
-    color: white;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 0.9rem;
-  }
-  
-  .file-name {
-    font-size: 0.9em;
-    color: #555;
-  }
-  
-  .error-message {
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 0.9rem;
-  }
-  
-  .pdf-container {
-    flex: 1;
-    position: relative;
-    background-color: #f5f5f5;
-    overflow: hidden;
-  }
-  
-  .debug-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    background-color: rgba(240, 248, 255, 0.8);
-    padding: 4px 8px;
-    font-size: 12px;
-    color: #0066cc;
-    z-index: 10;
-    word-break: break-all;
-  }
-  
-  .placeholder {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    text-align: center;
-    padding: 20px;
-  }
-  
-  .info-text {
-    font-size: 1.5rem;
-    color: #555;
-    margin-bottom: 10px;
-  }
-  
-  .feature-text {
-    font-size: 1.1rem;
-    color: #777;
-  }
-</style>
