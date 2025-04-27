@@ -2,15 +2,12 @@
 <script lang="ts">
   // IMPORTANTE: Importar los estilos CSS de PDFSlick
   import "@pdfslick/core/dist/pdf_viewer.css";
-  import { onMount } from 'svelte';
-  import ContextualPdfViewer from '$lib/components/ContextualPdfViewer.svelte';
+  // Solo usamos un iframe para renderizar el PDF
   
   let pdfUrl: string | null = null;
   let file: File | null = null;
   let isUploading = false;
   let uploadError = '';
-  let documentId = '';
-  let pdfLoaded = false;
   
   // Registrar cambios en pdfUrl para depuración
   $: if (pdfUrl) {
@@ -68,9 +65,6 @@
       }
       
       pdfUrl = `http://localhost:8000${data.url}`;
-      documentId = data.document_id || '';
-      pdfLoaded = true;
-      isUploading = false;
       console.log('PDF cargado exitosamente:', pdfUrl);
       
     } catch (error) {
@@ -143,12 +137,15 @@
       </div>
     {/if}
     
-    <!-- Reemplazamos SimplePDFViewer por ContextualPdfViewer -->
+    <!-- Reemplazamos el visor embebido con un iframe directo -->
     {#if pdfUrl}
-      <ContextualPdfViewer 
-        pdfUrl={pdfUrl} 
-        documentId={documentId}
-      />
+      <div class="pdf-container relative w-full h-full">
+        <iframe
+          src={`/pdfjs/web/viewer.html?file=${encodeURIComponent(pdfUrl)}`}
+          class="w-full h-full border-0"
+          allowfullscreen
+        ></iframe>
+      </div>
     {:else}
       <div class="placeholder">
         <p class="info-text">Selecciona un archivo PDF para comenzar</p>
