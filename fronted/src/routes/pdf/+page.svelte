@@ -2,14 +2,15 @@
 <script lang="ts">
   // Importamos el componente y el store
   import PdfJsViewer from '$lib/components/PdfJsViewer.svelte';
-  import { pdfStore } from '$lib/stores/pdf-state';
+  // import { pdfStore } from '$lib/stores/pdf-state'; // Comentado - Archivo no encontrado
   
   let file: File | null = null;
   let isUploading = false;
   let uploadError = '';
   
   // Usar el store para obtener la URL
-  $: pdfUrl = $pdfStore.url;
+  // $: pdfUrl = $pdfStore.url; // Comentado - pdfStore no está definido
+  let pdfUrl: string | null = null; // Usaremos una variable local en su lugar
   
   async function handleFileUpload(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -25,7 +26,7 @@
     uploadError = '';
     
     // Resetear el store al empezar una nueva carga
-    pdfStore.reset();
+    // pdfStore.reset(); // Comentado - pdfStore no está definido
     
     try {
       const formData = new FormData();
@@ -70,7 +71,8 @@
       
       // Verificar URL y cargar PDF
       if (await checkUrl(fullUrl)) {
-        pdfStore.loadPdf(fullUrl);
+        // pdfStore.loadPdf(fullUrl); // Comentado - pdfStore no está definido
+        pdfUrl = fullUrl; // Asignar a la variable local
       } else {
         throw new Error('La URL del PDF no es accesible');
       }
