@@ -106,3 +106,29 @@ button:focus:not(:focus-visible) {
 	width: 1px;
 	white-space: nowrap;
 }
+
+/* Mejora la visualización de la capa de texto */
+.textLayer {
+	opacity: 1 !important;
+	mix-blend-mode: multiply;
+	z-index: 2;
+}
+
+/* Estilo para texto seleccionado */
+.textLayer ::selection {
+	background-color: rgba(59, 130, 246, 0.3) !important;
+	color: inherit !important;
+}
+
+/* Mejora la visualización en modo de selección precisa */
+.precision-selection-mode .textLayer > span {
+	transition: background-color 0.15s ease-in-out;
+	border-radius: 2px;
+	margin: 0 -1px;
+	padding: 0 1px;
+}
+
+.precision-selection-mode .textLayer > span:hover {
+	background-color: rgba(59, 130, 246, 0.2) !important;
+	box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+}
