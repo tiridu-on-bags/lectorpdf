@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "@pdfslick/core/dist/pdf_viewer.css";
+  // import "@pdfslick/core/dist/pdf_viewer.css"; // Eliminar importación
   import SimplePDFViewer from '$lib/components/SimplePDFViewer.svelte';
   
   let file: File | null = null;
@@ -176,8 +176,29 @@
     height: 500px;
   }
   
-  /* Asegurar que el contenedor esté posicionado correctamente para PDFSlick */
-  :global(.pdf-container .pdfSlickContainer) {
-    position: absolute !important;
+  /* Estilos adicionales */
+  .upload-container {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  .pdf-container {
+    margin-top: 30px;
+    height: 600px; /* Altura fija para el contenedor del PDF */
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    position: relative; /* Necesario para el posicionamiento absoluto del viewer */
+  }
+
+  /* Estilo para el iframe (si se usa el enfoque simple) */
+  .pdf-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
   }
 </style> 

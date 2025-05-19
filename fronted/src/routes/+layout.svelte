@@ -1,7 +1,7 @@
 <script lang="ts">
-	import '@pdfslick/core/dist/pdf_viewer.css';
 	import '../app.css';
 	import Header from './Header.svelte';
+	import '@pdfslick/core/dist/pdf_viewer.css';
 </script>
 
 <div class="min-h-screen font-sans">
@@ -63,5 +63,24 @@
 
 	:global(.border-structure) {
 		border-color: var(--color-primary);
+	}
+
+	/* Estilos para PDFSlick */
+	:global(.pdfSlick) {
+		height: 100%;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+
+	:global(.pdfSlickContainer) {
+		position: relative;
+		height: 100%;
+		overflow: auto;
+		background-color: #f1f1f1;
+	}
+
+	:global(.pdfViewer) {
+		margin: 0 auto;
 	}
 </style>

@@ -1,8 +1,8 @@
 <script lang="ts">
 	// IMPORTANTE: Importar los estilos CSS de PDFSlick
-	import '@pdfslick/core/dist/pdf_viewer.css';
+	// import '@pdfslick/core/dist/pdf_viewer.css';
 	import { onMount } from 'svelte';
-	import ContextualPdfViewer from '$lib/components/ContextualPdfViewer.svelte';
+	// import ContextualPdfViewer from '$lib/components/ContextualPdfViewer.svelte';
 
 	let pdfUrl: string | null = null;
 	let file: File | null = null;
@@ -275,7 +275,7 @@
 				<div class="relative flex-grow">
 					<!-- Contenedor absoluto para PDFSlick -->
 					<div class="absolute inset-0">
-						<ContextualPdfViewer {pdfUrl} {documentId} />
+						<!-- ContextualPdfViewer {pdfUrl} {documentId} /> -->
 					</div>
 				</div>
 			{/if}
@@ -550,15 +550,13 @@
 	}
 
 	/* Asegurar que los estilos de PDFSlick no entren en conflicto */
+	/*
 	:global(.pdfSlickContainer) {
-		position: absolute !important; /* Necesario para el contenedor absoluto */
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background-color: #e0e0e0; /* Fondo mientras carga el PDF */
+		
 	}
+	
 	:global(.pdfSlickViewer) {
-		margin: 0 !important; /* Sobreescribir márgenes si los hubiera */
+		
 	}
+	*/
 </style>

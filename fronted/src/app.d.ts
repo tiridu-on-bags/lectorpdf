@@ -10,10 +10,4 @@ declare global {
 	}
 }
 
-// Declaración para el módulo PDF.js importado dinámicamente
-declare module '/pdfjs/pdf.mjs' {
-    const pdfjsLib: unknown;
-    export default pdfjsLib;
-}
-
 export {};
