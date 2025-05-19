@@ -21,3 +21,17 @@ API Gateway (FastAPI): Actúa como un punto de entrada único para todas las sol
 Servicios ML: Este componente encapsula la lógica de aprendizaje automático, que incluiría el procesamiento del PDF y la interacción con el LLM. Esto mantiene la lógica de ML separada de la interfaz y el gateway.
 Almacenamiento (S3): Utilizar un servicio de almacenamiento en la nube como S3 para guardar los archivos PDF es una práctica recomendada por su escalabilidad y durabilidad.
 Sistemas de Monitoreo: Incluir sistemas de monitoreo desde el inicio es crucial para observar el rendimiento de la aplicación, detectar errores y entender el uso.
+
+cd backend
+# Detectar Python 3 o Python (copiado del script)
+if command -v python3 &>/dev/null; then
+    PYTHON=python3
+elif command -v python &>/dev/null; then
+    PYTHON=python
+else
+    echo "Python no está instalado. Por favor instálalo e intenta de nuevo."
+    exit 1
+fi
+$PYTHON -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
